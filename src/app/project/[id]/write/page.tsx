@@ -1,0 +1,69 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { Novel } from '@/lib/types';
+import { getProject, saveProject } from '@/lib/storage';
+import ChapterEditor from '@/components/ChapterEditor';
+import Link from 'next/link';
+
+export default function WritePage() {
+  const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const chapterId = searchParams.get('chapter');
+  const [novel, setNovel] = useState<Novel | null>(null);
+
+  useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
+
+  if (!novel) return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-400">加载中...</div>;
+
+  const chapter = chapterId ? novel.chapters.find(c => c.id === chapterId) : novel.chapters[0];
+
+  if (!chapter) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <Link href={`/project/${id}/outline`} className="text-sm text-gray-400 hover:text-gray-600">← 返回大纲</Link>
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-3xl mb-2">✍️</p>
+          <p>还没有章节，先去「情节大纲」创建章节</p>
+          <Link href={`/project/${id}/outline`} className="text-indigo-600 hover:text-indigo-700 text-sm mt-4 inline-block">前往大纲页</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const novelContext = `小说《${novel.title}》${novel.genre ? `，类型：${novel.genre}` : ''}${novel.description ? `，简介：${novel.description}` : ''}${novel.notes ? `，设定：${novel.notes}` : ''}。角色：${novel.characters.map(c => `${c.name}(${c.role || '角色'}): ${c.personality}`).join('；')}`;
+
+  const updateChapter = (updated: typeof chapter) => {
+    const chs = novel.chapters.map(c => c.id === updated.id ? updated : c);
+    const updatedNovel = { ...novel, chapters: chs, updatedAt: new Date().toISOString() };
+    setNovel(updatedNovel);
+    saveProject(updatedNovel);
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <Link href={`/project/${id}/outline`} className="text-sm text-gray-400 hover:text-gray-600">← 返回大纲</Link>
+          <h1 className="text-xl font-bold text-gray-900">✍️ 写作 - {chapter.title}</h1>
+        </div>
+        {/* Chapter selector */}
+        {novel.chapters.length > 1 && (
+          <div className="flex gap-1 flex-wrap">
+            {[...novel.chapters].sort((a, b) => a.order - b.order).map(ch => (
+              <Link
+                key={ch.id}
+                href={`/project/${id}/write?chapter=${ch.id}`}
+                className={`text-xs px-3 py-1 rounded-full ${ch.id === chapter.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
+                {ch.order}. {ch.title.slice(0, 8)}{ch.title.length > 8 && '...'}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ChapterEditor chapter={chapter} onSave={updateChapter} novelContext={novelContext} />
+    </div>
+  );
+}
