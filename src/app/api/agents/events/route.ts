@@ -31,16 +31,17 @@ function detectCompletion(agents: AgentInfo[]): AgentInfo[] {
     return agents.map(a => {
       if (a.status === 'completed') return a;
       // Check for agent keywords in recent commits
-      const idShort = a.id.replace('dev-', '');
-      if (log.includes(idShort.toUpperCase()) || log.includes(a.name.slice(0, 6))) {
+      const idShort = a.id.replace('dev-', '').toUpperCase();
+      const namePart = a.name.slice(0, 6);
+      if (log.toUpperCase().includes(idShort) || log.includes(namePart)) {
         return { ...a, status: 'completed', updatedAt: new Date().toISOString() };
       }
-      // Check if related files were modified
+      // If agent is running and there are recent commits with code changes, mark as completed
       try {
-        const diff = execSync(`git -C "${CWD}" diff --name-only HEAD~3..HEAD 2>/dev/null`, { encoding: 'utf-8' });
-        if (diff.length > 50 && a.status === 'running') {
-          // Agent is active if files are changing
-          return a;
+        const changedFiles = execSync(`git -C "${CWD}" diff --name-only HEAD~5..HEAD 2>/dev/null`, { encoding: 'utf-8' });
+        const count = changedFiles.split('\n').filter(Boolean).length;
+        if (count > 5) {
+          return { ...a, status: 'completed', updatedAt: new Date().toISOString() };
         }
       } catch {}
       return a;
