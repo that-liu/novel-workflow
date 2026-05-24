@@ -4,6 +4,7 @@ import { Novel } from '@/lib/types';
 import { listProjects, saveProject, deleteProject } from '@/lib/storage';
 import ProjectCard from '@/components/ProjectCard';
 import QuickCreate from '@/components/QuickCreate';
+import MultiAgentPanel from '@/components/MultiAgentPanel';
 
 const GUIDE_STEPS = [
   { icon: '📖', title: '创建项目', desc: '给小说起个名字，选择类型，一句话简介' },
@@ -85,6 +86,11 @@ export default function Dashboard() {
 
       {/* Quick Create */}
       <QuickCreate onCreated={(novel) => setProjects(prev => [novel, ...prev])} />
+
+      {/* Multi-Agent Panel */}
+      <div className="mb-8">
+        <MultiAgentPanel onComplete={() => {}} />
+      </div>
 
       {/* Guide */}
       {showGuide && (
