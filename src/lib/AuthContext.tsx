@@ -11,9 +11,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   function decodeJWT(token: string) {
-    try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch { return null; }
+    try {
+      const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+      const json = typeof atob !== 'undefined' ? atob(base64) : Buffer.from(base64, 'base64').toString();
+      return JSON.parse(json);
+    } catch { return null; }
   }
   useEffect(() => {
+    if (typeof window === 'undefined') { setLoading(false); return; }
     const t = localStorage.getItem('nc_token');
     if (t) {
       const p = decodeJWT(t);
