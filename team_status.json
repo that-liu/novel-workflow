@@ -1,17 +1,16 @@
 {
   "agents": [
     { "id": "pm", "name": "PM 产品经理", "icon": "📋", "model": "deepseek-chat", "status": "completed", "task": "30+条需求 · 3条用户故事", "updatedAt": "2026-05-24T03:38:00Z" },
-    { "id": "user", "name": "User 用户代表", "icon": "✍️", "model": "deepseek-chat", "status": "completed", "task": "全流程体验反馈 · 编辑器+EPUB最痛", "updatedAt": "2026-05-24T03:47:00Z" },
-    { "id": "qa", "name": "QA R1 基础测试", "icon": "🔍", "model": "deepseek-chat", "status": "completed", "task": "14个Bug · 10/11 API通过", "updatedAt": "2026-05-24T04:09:00Z" },
-    { "id": "dev-r1", "name": "Dev R1 基础修复", "icon": "⚙️", "model": "deepseek-v4-pro", "status": "completed", "task": "数据统一 · 自动保存 · 删除确认 · AI错误处理", "updatedAt": "2026-05-24T03:45:00Z" },
+    { "id": "user", "name": "User 用户代表", "icon": "✍️", "model": "deepseek-chat", "status": "completed", "task": "全流程体验反馈", "updatedAt": "2026-05-24T03:47:00Z" },
+    { "id": "qa", "name": "QA 测试工程师", "icon": "🔍", "model": "deepseek-chat", "status": "completed", "task": "14+8个Bug全部修复", "updatedAt": "2026-05-24T04:09:00Z" },
+    { "id": "dev-r1", "name": "Dev R1 基础修复", "icon": "⚙️", "model": "deepseek-v4-pro", "status": "completed", "task": "数据统一 · 自动保存 · 删除确认 · AI错误", "updatedAt": "2026-05-24T03:45:00Z" },
     { "id": "dev-r2a", "name": "Dev R2-A Bug+EPUB", "icon": "📦", "model": "deepseek-v4-pro", "status": "completed", "task": "QA P0修复 · EPUB导出 · 世界观自动保存", "updatedAt": "2026-05-24T04:15:00Z" },
     { "id": "dev-r2b", "name": "Dev R2-B 编辑器重做", "icon": "✨", "model": "deepseek-v4-pro", "status": "completed", "task": "预览Tab · 斜杠命令 · 安全AI改写 · 选中操作", "updatedAt": "2026-05-24T04:20:00Z" },
     { "id": "dev-r2c", "name": "Dev R2-C AI记忆", "icon": "🧠", "model": "deepseek-v4-pro", "status": "completed", "task": "跨页对话记忆 · QuickCreate取消 · 生成后可编辑", "updatedAt": "2026-05-24T04:25:00Z" },
     { "id": "dev-r3a", "name": "Dev R3-A 质量+关系", "icon": "🔧", "model": "deepseek-v4-pro", "status": "completed", "task": "QA P1修复 · 角色关系 · 项目状态 · 章节导航", "updatedAt": "2026-05-24T04:40:00Z" },
     { "id": "dev-r3b", "name": "Dev R3-B 深色+统计", "icon": "🎨", "model": "deepseek-v4-pro", "status": "completed", "task": "深色模式全站适配 · 写作统计 · 目标字数", "updatedAt": "2026-05-24T04:55:00Z" },
-    { "id": "qa-r4", "name": "QA R4 真机测试", "icon": "🧪", "model": "deepseek-v4-pro", "status": "completed", "task": "端到端功能测试 · 8/8全部通过", "updatedAt": "2026-05-24T05:10:00Z" },
-    { "id": "dev-r4", "name": "Dev R4 修Bug", "icon": "🔨", "model": "deepseek-v4-pro", "status": "completed", "task": "4个API路由 JSON错误处理", "updatedAt": "2026-05-24T05:15:00Z" },
-    { "id": "qa-r5", "name": "QA R5 PM审计", "icon": "📋", "model": "deepseek-v4-pro", "status": "running", "task": "逐条核查PM需求完成情况", "updatedAt": "2026-05-24T05:20:00Z" }
+    { "id": "dev-r5", "name": "Dev R5 最后P1", "icon": "✅", "model": "deepseek-v4-pro", "status": "completed", "task": "编辑器上下文面板 · 时间线章节同步", "updatedAt": "2026-05-24T05:20:00Z" },
+    { "id": "pm-r6", "name": "PM R6 市场调研", "icon": "🔎", "model": "deepseek-v4-pro", "status": "running", "task": "跨平台收集AI创作工具需求 · 竞品分析", "updatedAt": "2026-05-24T05:25:00Z" }
   ],
-  "updatedAt": "2026-05-24T05:20:00Z"
+  "updatedAt": "2026-05-24T05:25:00Z"
 }
