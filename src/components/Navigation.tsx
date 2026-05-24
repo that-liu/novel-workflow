@@ -14,6 +14,9 @@ export default function Navigation() {
           <Link href="/" className={`${pathname === '/' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-600`}>
             项目
           </Link>
+          <Link href="/agents" className={`${pathname === '/agents' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-600`}>
+            🤖 Agent
+          </Link>
         </div>
       </div>
     </nav>
