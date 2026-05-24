@@ -7,21 +7,23 @@ import AIChat from '@/components/AIChat';
 import Link from 'next/link';
 
 interface WorldSetting {
-  era: string;
-  geography: string;
-  magic: string;
-  society: string;
-  factions: string;
-  rules: string;
+  era: string; geography: string; magic: string; society: string; factions: string; rules: string;
 }
+
+const FIELD_DEFS: { key: keyof WorldSetting; label: string; placeholder: string; icon: string }[] = [
+  { key: 'era', label: '时代背景', placeholder: '古代/现代/未来？科技水平？关键历史事件？', icon: '🏛️' },
+  { key: 'geography', label: '地理环境', placeholder: '城市/乡村/异世界？气候、地貌、交通方式？', icon: '🌍' },
+  { key: 'magic', label: '力量体系', placeholder: '魔法/超能力/科技？规则和限制？怎么修炼/获取？', icon: '⚡' },
+  { key: 'society', label: '社会结构', placeholder: '政治体制？阶级划分？文化风俗？经济体系？', icon: '🏰' },
+  { key: 'factions', label: '势力派系', placeholder: '组织/门派/国家？各自的目标和关系？', icon: '⚔️' },
+  { key: 'rules', label: '核心法则', placeholder: '这个世界的独特规则、禁忌或自然法则？', icon: '📜' },
+];
 
 export default function WorldPage() {
   const { id } = useParams<{ id: string }>();
   const [novel, setNovel] = useState<Novel | null>(null);
   const [settings, setSettings] = useState<WorldSetting>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(`world_${id}`) || '{}');
-    } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem(`world_${id}`) || '{}'); } catch { return {}; }
   });
 
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
@@ -30,47 +32,54 @@ export default function WorldPage() {
     const updated = { ...settings, [key]: value };
     setSettings(updated);
     localStorage.setItem(`world_${id}`, JSON.stringify(updated));
-    if (novel) {
-      const worldSummary = Object.entries(updated).filter(([, v]) => v).map(([k, v]) => `【${k}】${v}`).join('\n');
-      saveProject({ ...novel, notes: novel.notes ? novel.notes + '\n\n---\n世界观设定：\n' + worldSummary : '世界观设定：\n' + worldSummary, updatedAt: new Date().toISOString() });
-    }
+  };
+
+  const saveAll = () => {
+    if (!novel) return;
+    const worldSummary = Object.entries(settings).filter(([, v]) => v).map(([k, v]) => `【${FIELD_DEFS.find(f => f.key === k)?.label || k}】${v}`).join('\n');
+    const updated = { ...novel, notes: novel.notes ? novel.notes.split('---')[0].trim() + '\n\n---\n世界观：\n' + worldSummary : '世界观：\n' + worldSummary, updatedAt: new Date().toISOString() };
+    setNovel(updated);
+    saveProject(updated);
   };
 
   if (!novel) return <div className="max-w-4xl mx-auto px-4 py-8 text-gray-400">加载中...</div>;
 
-  const fields: { key: keyof WorldSetting; label: string; placeholder: string; icon: string }[] = [
-    { key: 'era', label: '时代背景', placeholder: '什么时代？古代/现代/未来？科技水平如何？', icon: '🏛️' },
-    { key: 'geography', label: '地理环境', placeholder: '故事发生在哪里？城市/乡村/异世界？有什么特色地貌？', icon: '🌍' },
-    { key: 'magic', label: '力量体系', placeholder: '魔法/超能力/科技？规则是什么？怎么修炼/升级？', icon: '⚡' },
-    { key: 'society', label: '社会结构', placeholder: '政治体制？阶级分化？文化风俗？经济体系？', icon: '🏰' },
-    { key: 'factions', label: '势力派系', placeholder: '有哪些组织/门派/国家？各自的目标和关系？', icon: '⚔️' },
-    { key: 'rules', label: '核心法则', placeholder: '这个世界有什么独特的规则或禁忌？', icon: '📜' },
-  ];
-
-  const worldPrompt = `用户正在创作小说《${novel.title}》${novel.genre ? `（${novel.genre}）` : ''}。${Object.entries(settings).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('。')}。请帮助用户完善世界观设定，每次探讨一个方面。`;
+  const filledCount = Object.values(settings).filter(v => v.trim()).length;
+  const worldPrompt = `用户正在创作《${novel.title}》${novel.genre ? `（${novel.genre}）` : ''}。已有设定：${Object.entries(settings).filter(([,v]) => v).map(([k,v]) => `${FIELD_DEFS.find(f => f.key === k)?.label}: ${v}`).join('；') || '暂无'}。请帮助完善世界观设定。`;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <Link href={`/project/${id}`} className="text-sm text-gray-400 hover:text-gray-600">← 返回项目</Link>
-      <h1 className="text-2xl font-bold text-gray-900 mt-2 mb-6">🌌 世界观设定</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {fields.map(f => (
-          <div key={f.key} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
-              <span>{f.icon}</span> {f.label}
-            </label>
-            <textarea
-              value={settings[f.key] || ''}
-              onChange={e => update(f.key, e.target.value)}
-              className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none h-28 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder={f.placeholder}
-            />
-          </div>
-        ))}
+      <div className="flex items-center justify-between mt-2 mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">🌌 世界观设定</h1>
+          <p className="text-gray-500 text-sm mt-1">构建你的故事世界。完成 {filledCount}/{FIELD_DEFS.length} 项</p>
+        </div>
+        <button onClick={saveAll} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700 shadow-sm">💾 保存全部</button>
       </div>
 
-      <AIChat systemPrompt={worldPrompt} title="🤖 世界观助手" placeholder="帮我完善世界观设定..." />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {FIELD_DEFS.map(f => (
+            <div key={f.key} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-2">
+                <span>{f.icon}</span> {f.label}
+                {settings[f.key]?.trim() && <span className="text-green-500 text-xs ml-auto">✓</span>}
+              </label>
+              <textarea
+                value={settings[f.key] || ''}
+                onChange={e => update(f.key, e.target.value)}
+                className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder={f.placeholder}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="h-[550px]">
+          <AIChat systemPrompt={worldPrompt} title="🤖 世界观助手" placeholder="讨论你的世界观设定..." />
+        </div>
+      </div>
     </div>
   );
 }
