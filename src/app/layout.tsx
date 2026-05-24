@@ -27,8 +27,16 @@ export default function RootLayout({
     <html
       lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-gray-50 flex flex-col">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('novelcraft-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-full bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Navigation />
         <main className="flex-1">{children}</main>
       </body>
