@@ -21,13 +21,11 @@ const AGENT_DEFS: Record<string, Omit<AgentInfo, 'status' | 'outputSize' | 'comp
   dev: { id: 'dev', name: 'Dev 开发工程师', role: '开发', icon: '⚙️', task: 'P0修复 · 数据统一 · 自动保存 · 确认弹窗', model: 'deepseek-reasoner' },
 };
 
-const BASE = path.join(process.cwd(), '..');
-
 export async function GET() {
   const agents: AgentInfo[] = [];
 
   for (const def of Object.values(AGENT_DEFS)) {
-    const outputFile = path.join(BASE, `team_${def.id}.md`);
+    const outputFile = path.join(process.cwd(), `team_${def.id}.md`);
     let status: AgentInfo['status'] = 'pending';
     let outputSize = 0;
     let completedAt: string | null = null;
@@ -38,10 +36,6 @@ export async function GET() {
       completedAt = stat.mtime.toISOString();
       status = outputSize > 500 ? 'completed' : 'running';
     } else {
-      // Check if the agent ever started (has any output)
-      const taskDir = path.join(process.cwd(), '..', '.claude', 'tasks');
-      // If no file and some time passed, mark as pending
-      status = 'pending';
     }
 
     agents.push({ ...def, status, outputSize, completedAt });
