@@ -10,11 +10,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  function decodeJWT(token: string) {
+    try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch { return null; }
+  }
   useEffect(() => {
     const t = localStorage.getItem('nc_token');
     if (t) {
-      const p = JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString());
-      if (p.exp > Date.now()) setUser({ email: p.email, plan: p.plan || 'free' });
+      const p = decodeJWT(t);
+      if (p && p.exp > Date.now()) setUser({ email: p.email, plan: p.plan || 'free' });
       else localStorage.removeItem('nc_token');
     }
     setLoading(false);
