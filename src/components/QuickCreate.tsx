@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Novel } from '@/lib/types';
 import { saveProject } from '@/lib/storage';
+import AutoWrite from '@/components/AutoWrite';
 
 const PHASES = [
   { key: 'meta', label: '生成作品信息', icon: '📖' },
@@ -174,12 +175,13 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
               )}
               <div className="flex gap-2 pt-2">
                 <button onClick={finishAndSave} className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm">
-                  ✅ 保存项目，开始创作
+                  ✅ 保存项目，去大纲页自动写作
                 </button>
                 <button onClick={() => { setIdea(''); setDonePhases(new Set()); setPreview({}); }} className="text-sm text-gray-500 px-4 hover:text-gray-700">
                   放弃重来
                 </button>
               </div>
+              <p className="text-xs text-gray-400 mt-1 text-center">保存后去「情节大纲」页，点击 🤖 自动写作即可一键写完所有章节</p>
             </div>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { Novel, Chapter } from '@/lib/types';
 import { getProject, saveProject } from '@/lib/storage';
 import { callAI } from '@/lib/ai';
+import AutoWrite from '@/components/AutoWrite';
 import Link from 'next/link';
 
 export default function OutlinePage() {
@@ -122,6 +123,12 @@ export default function OutlinePage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {sortedChapters.length > 0 && (
+        <div className="mt-8">
+          <AutoWrite novel={novel} onUpdate={(updated) => { setNovel(updated); }} />
         </div>
       )}
     </div>
