@@ -13,18 +13,11 @@ export default function Navigation() {
 
   const handleAuth = async () => {
     setError('');
-    const fn = authMode === 'login' ? (await import('@/lib/AuthContext')).useAuth().login : (await import('@/lib/AuthContext')).useAuth().register;
-    if (authMode === 'login') {
-      const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-      const d = await r.json();
-      if (d.error) { setError(d.error); return; }
-      localStorage.setItem('nc_token', d.token);
-    } else {
-      const r = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-      const d = await r.json();
-      if (d.error) { setError(d.error); return; }
-      localStorage.setItem('nc_token', d.token);
-    }
+    const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const r = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    const d = await r.json();
+    if (d.error) { setError(d.error); return; }
+    localStorage.setItem('nc_token', d.token);
     window.location.reload();
   };
 

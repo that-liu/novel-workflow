@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs'; import path from 'path';
+
+function getUser(req: NextRequest) { try { const t=(req.headers.get('authorization')||'').replace('Bearer ',''); const p=JSON.parse(Buffer.from(t.split('.')[1],'base64url').toString()); return p.exp>Date.now()?p:null; } catch { return null; } }
+function rateLimit(req: NextRequest): boolean {
+  const u=getUser(req); if(!u||u.plan==='pro') return true;
+  const today=new Date().toISOString().slice(0,10);
+  const f=path.join(process.cwd(),'data','users',`${(u.email||'').replace(/[^a-zA-Z0-9]/g,'_')}_usage.json`);
+  let usage:Record<string,number>={}; try{usage=JSON.parse(fs.readFileSync(f,'utf-8'));}catch{}
+  usage[today]=(usage[today]||0)+1; fs.writeFileSync(f,JSON.stringify(usage));
+  return (usage[today]||0)<=10;
+}
 
 const BASE_URL = process.env.ANTHROPIC_BASE_URL || 'https://api.deepseek.com/anthropic';
 const API_KEY = process.env.ANTHROPIC_AUTH_TOKEN || '';
 const MODEL = process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || 'deepseek-v4-pro';
 
 export async function POST(req: NextRequest) {
+  if (!rateLimit(req)) return NextResponse.json({ error: '今日AI调用次数已用完，请升级Pro' }, { status: 429 });
   let systemPrompt: string, userMessage: string, model: string | undefined;
   try {
     const body = await req.json();
