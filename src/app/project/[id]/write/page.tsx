@@ -14,17 +14,17 @@ export default function WritePage() {
 
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
 
-  if (!novel) return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-400">加载中...</div>;
+  if (!novel) return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-400 dark:text-gray-500">加载中...</div>;
 
   const chapter = chapterId ? novel.chapters.find(c => c.id === chapterId) : novel.chapters[0];
 
   if (!chapter) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Link href={`/project/${id}/outline`} className="text-sm text-gray-400 hover:text-gray-600">← 返回大纲</Link>
-        <div className="text-center py-20 text-gray-400">
+        <Link href={`/project/${id}/outline`} className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">← 返回大纲</Link>
+        <div className="text-center py-20 text-gray-400 dark:text-gray-500">
           <p className="text-3xl mb-2">✍️</p>
-          <p>还没有章节，先去「情节大纲」创建章节</p>
+          <p className="dark:text-gray-400">还没有章节，先去「情节大纲」创建章节</p>
           <Link href={`/project/${id}/outline`} className="text-indigo-600 hover:text-indigo-700 text-sm mt-4 inline-block">前往大纲页</Link>
         </div>
       </div>
@@ -44,8 +44,8 @@ export default function WritePage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <Link href={`/project/${id}/outline`} className="text-sm text-gray-400 hover:text-gray-600">← 返回大纲</Link>
-          <h1 className="text-xl font-bold text-gray-900">✍️ 写作 - {chapter.title}</h1>
+          <Link href={`/project/${id}/outline`} className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">← 返回大纲</Link>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">✍️ 写作 - {chapter.title}</h1>
         </div>
         {/* Chapter navigation: prev | dropdown | next */}
         {novel.chapters.length > 1 && (() => {
@@ -56,16 +56,16 @@ export default function WritePage() {
           return (
             <div className="flex items-center gap-2">
               {prev ? (
-                <Link href={`/project/${id}/write?chapter=${prev.id}`} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-medium">
+                <Link href={`/project/${id}/write?chapter=${prev.id}`} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium">
                   ‹ 上一章
                 </Link>
               ) : (
-                <span className="text-xs text-gray-300 px-2.5 py-1.5">‹ 上一章</span>
+                <span className="text-xs text-gray-300 dark:text-gray-600 px-2.5 py-1.5">‹ 上一章</span>
               )}
               <select
                 value={chapter.id}
                 onChange={e => window.location.href = `/project/${id}/write?chapter=${e.target.value}`}
-                className="border rounded-lg px-2 py-1.5 text-xs bg-white"
+                className="border rounded-lg px-2 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
               >
                 {sorted.map(ch => (
                   <option key={ch.id} value={ch.id}>
@@ -74,11 +74,11 @@ export default function WritePage() {
                 ))}
               </select>
               {next ? (
-                <Link href={`/project/${id}/write?chapter=${next.id}`} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-medium">
+                <Link href={`/project/${id}/write?chapter=${next.id}`} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium">
                   下一章 ›
                 </Link>
               ) : (
-                <span className="text-xs text-gray-300 px-2.5 py-1.5">下一章 ›</span>
+                <span className="text-xs text-gray-300 dark:text-gray-600 px-2.5 py-1.5">下一章 ›</span>
               )}
             </div>
           );

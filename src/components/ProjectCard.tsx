@@ -10,37 +10,37 @@ export default function ProjectCard({ novel, onDelete }: { novel: Novel; onDelet
   const timeAgo = getTimeAgo(new Date(novel.updatedAt));
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow group">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow group">
       <div className="flex justify-between items-start mb-3">
-        <Link href={`/project/${novel.id}`} className="text-lg font-semibold text-gray-900 hover:text-indigo-600">
+        <Link href={`/project/${novel.id}`} className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-indigo-600">
           {novel.title || '未命名作品'}
         </Link>
         <div className="flex items-center gap-2">
           {novel.status && (() => {
             const labels: Record<string, { label: string; color: string; bg: string }> = {
-              planning: { label: '规划中', color: 'text-yellow-700', bg: 'bg-yellow-100' },
-              writing: { label: '写作中', color: 'text-green-700', bg: 'bg-green-100' },
-              completed: { label: '已完成', color: 'text-blue-700', bg: 'bg-blue-100' },
-              paused: { label: '暂停', color: 'text-gray-600', bg: 'bg-gray-100' },
+              planning: { label: '规划中', color: 'text-yellow-700 dark:text-yellow-300', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
+              writing: { label: '写作中', color: 'text-green-700 dark:text-green-300', bg: 'bg-green-100 dark:bg-green-900/30' },
+              completed: { label: '已完成', color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+              paused: { label: '暂停', color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-700' },
             };
-            const s = labels[novel.status!] || { label: novel.status, color: 'text-gray-600', bg: 'bg-gray-100' };
+            const s = labels[novel.status!] || { label: novel.status, color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-700' };
             return <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${s.bg} ${s.color}`}>{s.label}</span>;
           })()}
-          <button onClick={() => { if (window.confirm(`确定要删除项目「${novel.title || '未命名'}」吗？此操作不可撤销。`)) onDelete(novel.id); }} className="text-gray-400 hover:text-red-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity" title="删除">✕</button>
+          <button onClick={() => { if (window.confirm(`确定要删除项目「${novel.title || '未命名'}」吗？此操作不可撤销。`)) onDelete(novel.id); }} className="text-gray-400 dark:text-gray-500 hover:text-red-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity" title="删除">✕</button>
         </div>
       </div>
-      <div className="text-sm text-gray-500 mb-3">
-        {novel.genre ? <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded mr-2">{novel.genre}</span> : null}
+      <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+        {novel.genre ? <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded mr-2">{novel.genre}</span> : null}
         {novel.description && <span className="line-clamp-1">{novel.description}</span>}
       </div>
-      <div className="flex items-center gap-4 text-xs text-gray-400 mb-3">
+      <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 mb-3">
         <span>{novel.chapters.length} 章</span>
         <span>{totalWords.toLocaleString()} 字</span>
         <span>{novel.characters.length} 个角色</span>
         <span className="ml-auto">{timeAgo}</span>
       </div>
       {novel.chapters.length > 0 && (
-        <div className="mb-3 w-full bg-gray-100 rounded-full h-1.5">
+        <div className="mb-3 w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
           <div className="bg-indigo-500 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
         </div>
       )}
@@ -50,11 +50,11 @@ export default function ProjectCard({ novel, onDelete }: { novel: Novel; onDelet
             ✍️ 继续写作
           </Link>
         ) : novel.chapters.length > 0 ? (
-          <Link href={`/project/${novel.id}/outline`} className="flex-1 text-center text-xs bg-gray-100 text-gray-600 py-1.5 rounded-lg hover:bg-gray-200 font-medium">
+          <Link href={`/project/${novel.id}/outline`} className="flex-1 text-center text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium">
             📋 查看大纲
           </Link>
         ) : null}
-        <Link href={`/project/${novel.id}/bible`} className="text-center text-xs bg-gray-50 text-gray-500 py-1.5 px-3 rounded-lg hover:bg-gray-100 font-medium">
+        <Link href={`/project/${novel.id}/bible`} className="text-center text-xs bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 py-1.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 font-medium">
           📖 故事圣经
         </Link>
       </div>

@@ -15,7 +15,7 @@ export default function CharactersPage() {
 
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
 
-  if (!novel) return <div className="max-w-4xl mx-auto px-4 py-8 text-gray-400">加载中...</div>;
+  if (!novel) return <div className="max-w-4xl mx-auto px-4 py-8 text-gray-400 dark:text-gray-500">加载中...</div>;
 
   const save = (char: Character) => {
     const updated = { ...novel };
@@ -41,11 +41,11 @@ export default function CharactersPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <Link href={`/project/${id}`} className="text-sm text-gray-400 hover:text-gray-600">← 返回项目</Link>
+      <Link href={`/project/${id}`} className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">← 返回项目</Link>
       <div className="flex items-center justify-between mt-2 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">👤 角色设计</h1>
-          <p className="text-gray-500 text-sm">创建和管理你的故事角色</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">👤 角色设计</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">创建和管理你的故事角色</p>
         </div>
         <button onClick={() => { setEditing(undefined); setShowForm(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">
           + 添加角色
@@ -61,32 +61,32 @@ export default function CharactersPage() {
           )}
 
           {novel.characters.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16 text-gray-400 dark:text-gray-500">
               <p className="text-3xl mb-2">🎭</p>
-              <p>还没有角色，点击上方按钮创建</p>
+              <p className="dark:text-gray-400">还没有角色，点击上方按钮创建</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {novel.characters.map(char => (
-                <div key={char.id} className="bg-white border border-gray-200 rounded-xl p-5">
+                <div key={char.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{char.name}</h3>
-                      {char.role && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{char.role}</span>}
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{char.name}</h3>
+                      {char.role && <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">{char.role}</span>}
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => { setEditing(char); setShowForm(true); }} className="text-xs text-gray-400 hover:text-indigo-600">编辑</button>
-                      <button onClick={() => remove(char.id)} className="text-xs text-gray-400 hover:text-red-500 ml-1">删除</button>
+                      <button onClick={() => { setEditing(char); setShowForm(true); }} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600">编辑</button>
+                      <button onClick={() => remove(char.id)} className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 ml-1">删除</button>
                     </div>
                   </div>
-                  {char.personality && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{char.personality}</p>}
-                  {char.motivation && <p className="text-xs text-gray-400 mt-1">动机：{char.motivation.slice(0, 60)}{char.motivation.length > 60 && '...'}</p>}
+                  {char.personality && <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">{char.personality}</p>}
+                  {char.motivation && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">动机：{char.motivation.slice(0, 60)}{char.motivation.length > 60 && '...'}</p>}
                   {char.relationships && char.relationships.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {char.relationships.map((rel, i) => {
                         const target = novel.characters.find(c => c.id === rel.targetId);
                         return target ? (
-                          <span key={i} className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full">
+                          <span key={i} className="text-[10px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 px-1.5 py-0.5 rounded-full">
                             {target.name} · {rel.type || '关系'}
                           </span>
                         ) : null;

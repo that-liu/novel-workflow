@@ -21,7 +21,7 @@ export default function ExportPage() {
 
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
 
-  if (!novel) return <div className="max-w-4xl mx-auto px-4 py-8 text-gray-400">加载中...</div>;
+  if (!novel) return <div className="max-w-4xl mx-auto px-4 py-8 text-gray-400 dark:text-gray-500">加载中...</div>;
 
   const totalWords = novel.chapters.reduce((s, c) => s + c.wordCount, 0);
   const doneChapters = novel.chapters.filter(c => c.status === 'done').length;
@@ -82,7 +82,6 @@ export default function ExportPage() {
 </container>`);
 
     const sortedChapters: Chapter[] = [...novel.chapters].sort((a, b) => a.order - b.order);
-    const safeId = (text: string) => text.replace(/[^\w一-鿿]/g, '_').slice(0, 50) || 'chapter';
     const chapterFiles = sortedChapters.map((ch, i) => {
       const id = `chapter-${i + 1}`;
       const filename = `${id}.xhtml`;
@@ -178,15 +177,15 @@ p { text-indent: 2em; margin: 0.5em 0; }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <Link href={`/project/${id}`} className="text-sm text-gray-400 hover:text-gray-600">← 返回项目</Link>
+      <Link href={`/project/${id}`} className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">← 返回项目</Link>
       <div className="flex items-center justify-between mt-2 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">📦 导出作品</h1>
-          <p className="text-gray-500 text-sm">预览并下载你的完整小说</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">📦 导出作品</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">预览并下载你的完整小说</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => download(generateMarkdown(), `${novel.title}.md`, 'text/markdown')} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">Markdown</button>
-          <button onClick={() => download(generateTxt(), `${novel.title}.txt`, 'text/plain')} className="bg-gray-700 text-white px-4 py-2 rounded-xl text-sm hover:bg-gray-800">TXT</button>
+          <button onClick={() => download(generateTxt(), `${novel.title}.txt`, 'text/plain')} className="bg-gray-700 dark:bg-gray-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-gray-800 dark:hover:bg-gray-500">TXT</button>
           <button onClick={() => download(generateHtml(), `${novel.title}.html`, 'text/html')} className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-green-700">HTML</button>
           <button onClick={generateEpub} className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-purple-700">📖 EPUB</button>
           <button onClick={() => { navigator.clipboard.writeText(generateTxt()); alert('已复制全文到剪贴板！'); }} className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-amber-700">📋 复制全文</button>
@@ -194,35 +193,35 @@ p { text-indent: 2em; margin: 0.5em 0; }
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
           <div className="text-2xl font-bold text-indigo-600">{novel.chapters.length}</div>
-          <div className="text-sm text-gray-500">章节数</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">章节数</div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
           <div className="text-2xl font-bold text-indigo-600">{totalWords.toLocaleString()}</div>
-          <div className="text-sm text-gray-500">总字数</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">总字数</div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
           <div className="text-2xl font-bold text-indigo-600">{doneChapters}/{novel.chapters.length}</div>
-          <div className="text-sm text-gray-500">完成章节</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">完成章节</div>
         </div>
       </div>
 
       {sortedChapters.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-gray-400 dark:text-gray-500">
           <p className="text-3xl mb-2">📄</p>
-          <p>还没有内容可以预览，先去写点什么吧</p>
+          <p className="dark:text-gray-400">还没有内容可以预览，先去写点什么吧</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h1 className="text-3xl font-bold text-center mb-2">{novel.title}</h1>
-          {novel.description && <p className="text-center text-gray-500 mb-6 italic">{novel.description}</p>}
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <h1 className="text-3xl font-bold text-center mb-2 dark:text-gray-100">{novel.title}</h1>
+          {novel.description && <p className="text-center text-gray-500 dark:text-gray-400 mb-6 italic">{novel.description}</p>}
           {sortedChapters.map(ch => (
-            <div key={ch.id} className="mb-8 pb-8 border-b border-gray-100 last:border-0">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">第{ch.order}章 {ch.title}</h2>
-              {ch.summary && <p className="text-sm text-gray-400 italic mb-4">摘要：{ch.summary}</p>}
-              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-serif">
-                {ch.content || <span className="text-gray-300">（暂无内容）</span>}
+            <div key={ch.id} className="mb-8 pb-8 border-b border-gray-100 dark:border-gray-700 last:border-0">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">第{ch.order}章 {ch.title}</h2>
+              {ch.summary && <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-4">摘要：{ch.summary}</p>}
+              <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-serif">
+                {ch.content || <span className="text-gray-300 dark:text-gray-600">（暂无内容）</span>}
               </div>
             </div>
           ))}

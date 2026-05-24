@@ -98,41 +98,41 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
   };
 
   return (
-    <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white shadow-sm">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <span className="text-sm font-semibold text-gray-700">{title || 'AI 助手'}</span>
+    <div className="flex flex-col h-full border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm">
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{title || 'AI 助手'}</span>
         <div className="flex items-center gap-2">
-          <select value={model} onChange={e => setModel(e.target.value)} className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-600">
+          <select value={model} onChange={e => setModel(e.target.value)} className="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300">
             {AI_MODELS.map(m => (
               <option key={m.id} value={m.id} title={m.desc}>{m.label}</option>
             ))}
           </select>
           {messages.length > 0 && (
-            <button onClick={clearHistory} className="text-xs text-gray-400 hover:text-red-500">清空</button>
+            <button onClick={clearHistory} className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500">清空</button>
           )}
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[400px] max-h-[600px]">
         {messages.length === 0 && !streaming && (
-          <p className="text-gray-400 text-sm text-center mt-16">{placeholder || '输入你的想法，AI 帮你完善...'}</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm text-center mt-16">{placeholder || '输入你的想法，AI 帮你完善...'}</p>
         )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm ${
               m.role === 'ai'
-                ? 'bg-indigo-50 text-gray-800 rounded-tl-sm'
-                : 'bg-gray-100 text-gray-800 rounded-tr-sm'
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-gray-800 dark:text-gray-200 rounded-tl-sm'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-tr-sm'
             }`}>
-              <div className="text-xs text-gray-400 mb-1">{m.role === 'ai' ? 'AI' : '你'}</div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">{m.role === 'ai' ? 'AI' : '你'}</div>
               <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
             </div>
           </div>
         ))}
         {streaming !== null && (
           <div className="flex justify-start">
-            <div className="max-w-[85%] p-3.5 rounded-2xl rounded-tl-sm bg-indigo-50 text-gray-800 text-sm">
-              <div className="text-xs text-gray-400 mb-1">AI 正在输出...</div>
+            <div className="max-w-[85%] p-3.5 rounded-2xl rounded-tl-sm bg-indigo-50 dark:bg-indigo-900/30 text-gray-800 dark:text-gray-200 text-sm">
+              <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">AI 正在输出...</div>
               <div className="whitespace-pre-wrap leading-relaxed">
                 {streaming}
                 <span className="inline-block w-1.5 h-4 bg-indigo-500 ml-0.5 animate-pulse align-text-bottom" />
@@ -142,7 +142,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
         )}
         {loading && streaming === null && (
           <div className="flex justify-start">
-            <div className="bg-indigo-50 rounded-2xl rounded-tl-sm px-4 py-3">
+            <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl rounded-tl-sm px-4 py-3">
               <div className="flex gap-1.5">
                 <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -154,7 +154,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-gray-200 p-3 flex gap-2">
+      <div className="border-t border-gray-200 dark:border-gray-700 p-3 flex gap-2">
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -165,7 +165,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
             }
           }}
           placeholder={loading ? 'AI 正在回复中...' : (placeholder || '输入内容...')}
-          className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-200"
           disabled={loading && streaming === null}
         />
         {streaming !== null ? (

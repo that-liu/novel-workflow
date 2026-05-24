@@ -87,9 +87,9 @@ export default function AutoWrite({ novel, onUpdate }: { novel: Novel; onUpdate:
   };
 
   return (
-    <div className="bg-gradient-to-br from-green-50 via-white to-emerald-50 border border-green-200 rounded-2xl p-5 shadow-sm">
-      <h3 className="text-base font-bold text-gray-900 mb-1">🤖 自动写作</h3>
-      <p className="text-sm text-gray-500 mb-4">AI 将按大纲逐章撰写所有草稿章节（{draftChapters.length} 章待写）</p>
+    <div className="bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950/30 dark:via-gray-800 dark:to-emerald-950/30 border border-green-200 dark:border-green-800 rounded-2xl p-5 shadow-sm">
+      <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-1">🤖 自动写作</h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">AI 将按大纲逐章撰写所有草稿章节（{draftChapters.length} 章待写）</p>
 
       {!running && Object.keys(writtenChapters).length === 0 && (
         <button
@@ -104,17 +104,17 @@ export default function AutoWrite({ novel, onUpdate }: { novel: Novel; onUpdate:
       {running && (
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
                 className="bg-green-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${draftChapters.length > 0 ? ((currentIdx + 1) / draftChapters.length) * 100 : 0}%` }}
               />
             </div>
-            <span className="text-xs text-gray-500 font-mono whitespace-nowrap">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-mono whitespace-nowrap">
               {currentIdx + 1}/{draftChapters.length}
             </span>
           </div>
-          <p className="text-sm text-green-700 text-center">
+          <p className="text-sm text-green-700 dark:text-green-300 text-center">
             ✍️ 正在写第{draftChapters[currentIdx]?.order || ''}章「{draftChapters[currentIdx]?.title || ''}」...
           </p>
           <div className="flex gap-1.5 justify-center">
@@ -128,22 +128,22 @@ export default function AutoWrite({ novel, onUpdate }: { novel: Novel; onUpdate:
       {/* Written chapters list */}
       {Object.keys(writtenChapters).length > 0 && (
         <div className="mt-4 space-y-2">
-          <p className="text-sm font-semibold text-gray-700">已完成章节：</p>
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">已完成章节：</p>
           {novel.chapters.filter(c => writtenChapters[c.id]).sort((a, b) => a.order - b.order).map(ch => (
-            <div key={ch.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 text-sm border border-gray-100">
-              <span>第{ch.order}章 {ch.title}</span>
-              <span className="text-xs text-green-600">{writtenChapters[ch.id].replace(/\s/g, '').length.toLocaleString()} 字 ✅</span>
+            <div key={ch.id} className="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg px-3 py-2 text-sm border border-gray-100 dark:border-gray-600">
+              <span className="dark:text-gray-200">第{ch.order}章 {ch.title}</span>
+              <span className="text-xs text-green-600 dark:text-green-400">{writtenChapters[ch.id].replace(/\s/g, '').length.toLocaleString()} 字 ✅</span>
             </div>
           ))}
         </div>
       )}
 
-      {error && <div className="mt-3 bg-red-50 text-red-700 p-3 rounded-xl text-sm">{error}</div>}
+      {error && <div className="mt-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-3 rounded-xl text-sm">{error}</div>}
 
       {!running && Object.keys(writtenChapters).length > 0 && draftChapters.length > 0 && (
         <button
           onClick={startAutoWrite}
-          className="mt-3 w-full border border-green-300 text-green-700 px-4 py-2 rounded-xl text-sm hover:bg-green-50"
+          className="mt-3 w-full border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-2 rounded-xl text-sm hover:bg-green-50 dark:hover:bg-green-950/30"
         >
           ▶️ 继续写剩余章节
         </button>

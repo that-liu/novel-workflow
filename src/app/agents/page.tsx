@@ -9,9 +9,9 @@ interface AgentInfo {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; ring: string }> = {
-  running:  { label: '⚡ 运行中', color: 'text-green-700', bg: 'bg-green-100', ring: 'border-green-300 ring-1 ring-green-200' },
-  completed:{ label: '✅ 已完成', color: 'text-gray-600', bg: 'bg-gray-100', ring: 'border-gray-200' },
-  pending:  { label: '⏳ 等待中', color: 'text-gray-400', bg: 'bg-gray-50', ring: 'border-gray-200 opacity-60' },
+  running:  { label: '⚡ 运行中', color: 'text-green-700', bg: 'bg-green-100 dark:bg-green-900/30', ring: 'border-green-300 ring-1 ring-green-200' },
+  completed:{ label: '✅ 已完成', color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-700', ring: 'border-gray-200 dark:border-gray-600' },
+  pending:  { label: '⏳ 等待中', color: 'text-gray-400', bg: 'bg-gray-50 dark:bg-gray-800/50', ring: 'border-gray-200 dark:border-gray-600 opacity-60' },
 };
 
 export default function AgentDashboard() {
@@ -82,8 +82,8 @@ export default function AgentDashboard() {
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">🤖 Agent 工作台</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🤖 Agent 工作台</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             SSE 实时推送 · 2秒检测
             <span className={`inline-block w-2 h-2 rounded-full ml-2 ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
             <span className="text-xs ml-1">{connected ? '已连接' : '重连中...'}</span>
@@ -92,19 +92,19 @@ export default function AgentDashboard() {
         <div className="flex gap-4 text-sm">
           <StatBox value={completed} label="完成" color="text-green-600" />
           <StatBox value={running} label="运行中" color="text-indigo-600" />
-          <StatBox value={`${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`} label="时长" color="text-gray-600" />
+          <StatBox value={`${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`} label="时长" color="text-gray-600 dark:text-gray-400" />
         </div>
       </div>
 
       {/* Round indicators */}
       <div className="flex gap-3 mb-6">
-        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${round1Done ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${round1Done ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
           🔄 第一轮 {round1Done ? '✅' : '···'}
         </div>
-        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${round2Done ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${round2Done ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
           🔄 第二轮 {round2Done ? '✅' : '···'}
         </div>
-        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${allDone ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${allDone ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
           🎯 全部完成 {allDone ? '✅' : '···'}
         </div>
       </div>
@@ -114,13 +114,13 @@ export default function AgentDashboard() {
         {agents.map(agent => {
           const st = STATUS_MAP[agent.status] || STATUS_MAP.pending;
           return (
-            <div key={agent.id} className={`bg-white border rounded-2xl p-4 shadow-sm transition-all ${st.ring}`}>
+            <div key={agent.id} className={`bg-white dark:bg-gray-800 border rounded-2xl p-4 shadow-sm transition-all ${st.ring}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{agent.icon}</span>
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-sm">{agent.name}</h3>
-                    <p className="text-xs text-gray-500">{agent.model}</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{agent.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{agent.model}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -136,9 +136,9 @@ export default function AgentDashboard() {
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-gray-600 mt-2">{agent.task}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">{agent.task}</p>
               {agentTimeMap[agent.id] && (
-                <p className="text-[10px] text-gray-400 mt-1">
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
                   {agentTimeMap[agent.id]}
                 </p>
               )}
@@ -148,7 +148,7 @@ export default function AgentDashboard() {
       </div>
 
       {/* Logs */}
-      <div className="mt-6 bg-gray-900 rounded-2xl p-4 font-mono text-xs h-40 overflow-y-auto">
+      <div className="mt-6 bg-gray-900 dark:bg-gray-950 rounded-2xl p-4 font-mono text-xs h-40 overflow-y-auto">
         <div className="text-gray-500 mb-2">$ journalctl -f -u agent-pipeline</div>
         {logs.length === 0 && <div className="text-green-400/50">等待事件...</div>}
         {logs.map((l, i) => <div key={i} className="text-green-400">{l}</div>)}
@@ -158,7 +158,7 @@ export default function AgentDashboard() {
       <div className="mt-6 flex gap-3 text-sm">
         <Link href="/" className="text-indigo-600 hover:text-indigo-700">← NovelCraft</Link>
         {allDone && <span className="text-green-600 font-medium">🎉 全部分析完成，可以开始第三轮开发</span>}
-        {updatedAt && <span className="text-xs text-gray-400 ml-auto">更新于 {formattedUpdatedAt}</span>}
+        {updatedAt && <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">更新于 {formattedUpdatedAt}</span>}
       </div>
     </div>
   );
@@ -168,7 +168,7 @@ function StatBox({ value, label, color }: { value: number | string; label: strin
   return (
     <div className="text-center">
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
     </div>
   );
 }

@@ -42,37 +42,37 @@ export default function CharacterForm({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs text-gray-500">名字</label>
-          <input value={char.name} onChange={e => update('name', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="角色名字" />
+          <label className="text-xs text-gray-500 dark:text-gray-400">名字</label>
+          <input value={char.name} onChange={e => update('name', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" placeholder="角色名字" />
         </div>
         <div>
-          <label className="text-xs text-gray-500">角色</label>
-          <input value={char.role} onChange={e => update('role', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="主角/反派/配角" />
+          <label className="text-xs text-gray-500 dark:text-gray-400">角色</label>
+          <input value={char.role} onChange={e => update('role', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" placeholder="主角/反派/配角" />
         </div>
       </div>
       <div>
         <div className="flex items-center justify-between">
-          <label className="text-xs text-gray-500">个性特点</label>
+          <label className="text-xs text-gray-500 dark:text-gray-400">个性特点</label>
           <button onClick={generateCharacter} disabled={generating || !char.name} className="text-xs text-indigo-600 hover:text-indigo-700 disabled:opacity-50">
             {generating ? 'AI 生成中...' : '🤖 AI 生成全部'}
           </button>
         </div>
-        <textarea value={char.personality} onChange={e => update('personality', e.target.value)} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="性格、习惯、特点..." />
+        <textarea value={char.personality} onChange={e => update('personality', e.target.value)} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" placeholder="性格、习惯、特点..." />
       </div>
       <div>
-        <label className="text-xs text-gray-500">背景故事</label>
-        <textarea value={char.backstory} onChange={e => update('backstory', e.target.value)} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="过去经历..." />
+        <label className="text-xs text-gray-500 dark:text-gray-400">背景故事</label>
+        <textarea value={char.backstory} onChange={e => update('backstory', e.target.value)} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" placeholder="过去经历..." />
       </div>
       <div>
-        <label className="text-xs text-gray-500">动机目标</label>
-        <textarea value={char.motivation} onChange={e => update('motivation', e.target.value)} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="想要什么、为什么..." />
+        <label className="text-xs text-gray-500 dark:text-gray-400">动机目标</label>
+        <textarea value={char.motivation} onChange={e => update('motivation', e.target.value)} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm mt-1 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" placeholder="想要什么、为什么..." />
       </div>
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-xs text-gray-500">角色关系</label>
+          <label className="text-xs text-gray-500 dark:text-gray-400">角色关系</label>
         </div>
         {(char.relationships || []).map((rel, i) => {
           const target = allCharacters.find(c => c.id === rel.targetId);
@@ -86,7 +86,7 @@ export default function CharacterForm({
                   updated[i] = { ...updated[i], targetId: e.target.value };
                   setChar(prev => ({ ...prev, relationships: updated }));
                 }}
-                className="border rounded-lg px-2 py-1.5 text-xs flex-1"
+                className="border rounded-lg px-2 py-1.5 text-xs flex-1 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
               >
                 <option value="">选择角色</option>
                 {otherChars.map(c => (
@@ -100,7 +100,7 @@ export default function CharacterForm({
                   updated[i] = { ...updated[i], type: e.target.value };
                   setChar(prev => ({ ...prev, relationships: updated }));
                 }}
-                className="border rounded-lg px-2 py-1.5 text-xs"
+                className="border rounded-lg px-2 py-1.5 text-xs dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
               >
                 <option value="">关系类型</option>
                 <option value="盟友">盟友</option>
@@ -118,7 +118,7 @@ export default function CharacterForm({
                   updated[i] = { ...updated[i], note: e.target.value };
                   setChar(prev => ({ ...prev, relationships: updated }));
                 }}
-                className="border rounded-lg px-2 py-1.5 text-xs flex-1"
+                className="border rounded-lg px-2 py-1.5 text-xs flex-1 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
                 placeholder="备注"
               />
               <button
@@ -146,7 +146,7 @@ export default function CharacterForm({
         </button>
       </div>
       <div className="flex gap-2 justify-end">
-        <button onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">取消</button>
+        <button onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">取消</button>
         <button onClick={() => onSave(char)} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">保存</button>
       </div>
     </div>
