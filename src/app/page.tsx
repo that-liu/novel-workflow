@@ -30,7 +30,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
 
-  const filtered = projects.filter(p => {
+  const filtered = (Array.isArray(projects) ? projects : []).filter(p => {
     if (search && !p.title.includes(search) && !p.description.includes(search)) return false;
     if (filterGenre && p.genre !== filterGenre) return false;
     return true;
