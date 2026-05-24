@@ -99,6 +99,11 @@ export default function TimelinePage() {
                     <option key={ch.id} value={ch.id}>第{ch.order}章</option>
                   ))}
                 </select>
+                {evt.chapterRef && (
+                  <Link href={`/project/${id}/write?chapter=${evt.chapterRef}`} className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium shrink-0">
+                    → 去写作
+                  </Link>
+                )}
               </div>
               <textarea
                 value={evt.description}

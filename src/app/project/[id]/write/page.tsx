@@ -85,7 +85,7 @@ export default function WritePage() {
         })()}
       </div>
 
-      <ChapterEditor chapter={chapter} onSave={updateChapter} novelContext={novelContext} />
+      <ChapterEditor chapter={chapter} onSave={updateChapter} novelContext={novelContext} characters={novel.characters} worldSettings={novel.worldSettings} />
     </div>
   );
 }

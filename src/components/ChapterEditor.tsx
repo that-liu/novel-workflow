@@ -1,7 +1,12 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Chapter } from '@/lib/types';
+import { Chapter, Novel } from '@/lib/types';
 import { callAI } from '@/lib/ai';
+
+const WORLD_LABELS: Record<string, string> = {
+  era: '时代背景', geography: '地理环境', magic: '力量体系',
+  society: '社会结构', factions: '势力派系', rules: '核心法则',
+};
 
 const AI_MODES = [
   { id: 'continue', label: '续写', desc: '接着内容继续写', color: 'indigo' },
@@ -46,10 +51,14 @@ export default function ChapterEditor({
   chapter,
   onSave,
   novelContext,
+  characters,
+  worldSettings,
 }: {
   chapter: Chapter;
   onSave: (c: Chapter) => void;
   novelContext: string;
+  characters: Novel['characters'];
+  worldSettings: Novel['worldSettings'];
 }) {
   const [content, setContent] = useState(chapter.content);
   const [loading, setLoading] = useState<AiModeId | 'custom' | ''>('');
@@ -57,6 +66,7 @@ export default function ChapterEditor({
   const [wordGoal, setWordGoal] = useState(2000);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+  const [contextOpen, setContextOpen] = useState(false);
   const lastSavedRef = useRef(chapter.content);
   const chapterRef = useRef(chapter);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -421,6 +431,48 @@ export default function ChapterEditor({
             <kbd className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-xs dark:text-gray-300">/improve</kbd> 斜杠命令
           </p>
           <p className="mt-1 text-gray-400 dark:text-gray-500">选中文本后点 AI 按钮，只对选中部分生效</p>
+        </div>
+
+        {/* ---- Context panel ---- */}
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+          <button
+            onClick={() => setContextOpen(!contextOpen)}
+            className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+          >
+            <span>📋 上下文</span>
+            <span className={`transform transition-transform text-[10px] ${contextOpen ? 'rotate-90' : ''}`}>▶</span>
+          </button>
+          {contextOpen && (
+            <div className="px-3 pb-3 space-y-3 text-xs max-h-64 overflow-y-auto">
+              {characters.length > 0 && (
+                <div>
+                  <h5 className="font-semibold text-gray-500 dark:text-gray-400 mb-1.5">角色 ({characters.length})</h5>
+                  <div className="space-y-1.5">
+                    {characters.map(c => (
+                      <div key={c.id}>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{c.name}</span>
+                        {c.role && <span className="text-gray-400 dark:text-gray-500"> · {c.role}</span>}
+                        {c.personality && <p className="text-gray-400 dark:text-gray-500 truncate">{c.personality}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {worldSettings && Object.entries(worldSettings).some(([, v]) => v) && (
+                <div>
+                  <h5 className="font-semibold text-gray-500 dark:text-gray-400 mb-1.5">世界观</h5>
+                  <div className="space-y-1.5">
+                    {Object.entries(worldSettings).filter(([, v]) => v).map(([k, v]) => (
+                      <div key={k}>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{WORLD_LABELS[k] || k}</span>
+                        <p className="text-gray-400 dark:text-gray-500 truncate">{v as string}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

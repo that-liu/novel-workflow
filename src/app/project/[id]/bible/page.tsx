@@ -100,13 +100,21 @@ export default function StoryBible() {
         <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mb-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3">⏳ 故事时间线</h2>
           <div className="space-y-2">
-            {timelineEvents.map((evt: { id: string; time: string; title: string; description: string }, i: number) => (
-              <div key={evt.id || i} className="flex items-start gap-3 text-sm">
-                <span className="font-mono text-indigo-600 dark:text-indigo-400 shrink-0 w-20">{evt.time}</span>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">{evt.title}</span>
-                {evt.description && <span className="text-gray-500 dark:text-gray-400">— {evt.description}</span>}
-              </div>
-            ))}
+            {timelineEvents.map((evt, i: number) => {
+              const linkedChapter = evt.chapterRef ? sortedChapters.find(c => c.id === evt.chapterRef) : null;
+              return (
+                <div key={evt.id || i} className="flex items-start gap-3 text-sm">
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 shrink-0 w-20">{evt.time}</span>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">{evt.title}</span>
+                  {evt.description && <span className="text-gray-500 dark:text-gray-400">— {evt.description}</span>}
+                  {linkedChapter && (
+                    <Link href={`/project/${id}/write?chapter=${linkedChapter.id}`} className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 shrink-0 font-medium">
+                      第{linkedChapter.order}章
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

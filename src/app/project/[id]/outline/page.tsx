@@ -37,7 +37,13 @@ export default function OutlinePage() {
   const removeChapter = (chId: string) => {
     const ch = novel.chapters.find(c => c.id === chId);
     if (!window.confirm(`确定要删除章节「${ch?.title || '第' + ch?.order + '章'}」吗？此操作不可撤销。`)) return;
-    updateAndSave(novel.chapters.filter(c => c.id !== chId).map((c, i) => ({ ...c, order: i + 1 })));
+    const filteredChapters = novel.chapters.filter(c => c.id !== chId).map((c, i) => ({ ...c, order: i + 1 }));
+    const cleanedTimeline = (novel.timelineEvents || []).map(evt =>
+      evt.chapterRef === chId ? { ...evt, chapterRef: '' } : evt
+    );
+    const updated = { ...novel, chapters: filteredChapters, timelineEvents: cleanedTimeline, updatedAt: new Date().toISOString() };
+    setNovel(updated);
+    saveProject(updated);
   };
 
   const generateOutline = async () => {
