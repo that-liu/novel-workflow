@@ -1,144 +1,144 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 interface AgentInfo {
-  id: string; name: string; role: string; icon: string;
-  status: 'running' | 'completed' | 'pending' | 'failed';
-  task: string; model: string; outputSize: number; completedAt: string | null;
+  id: string; name: string; icon: string; model: string;
+  status: 'running' | 'completed' | 'pending';
+  task: string; updatedAt: string | null;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  running: '⚡ 运行中', completed: '✅ 已完成', failed: '⏸️ 中断', pending: '⏳ 等待',
+const STATUS_MAP: Record<string, { label: string; color: string; bg: string; ring: string }> = {
+  running:  { label: '⚡ 运行中', color: 'text-green-700', bg: 'bg-green-100', ring: 'border-green-300 ring-1 ring-green-200' },
+  completed:{ label: '✅ 已完成', color: 'text-gray-600', bg: 'bg-gray-100', ring: 'border-gray-200' },
+  pending:  { label: '⏳ 等待中', color: 'text-gray-400', bg: 'bg-gray-50', ring: 'border-gray-200 opacity-60' },
 };
 
 export default function AgentDashboard() {
   const [agents, setAgents] = useState<AgentInfo[]>([]);
-  const [pipeline, setPipeline] = useState<Record<string, boolean>>({});
+  const [updatedAt, setUpdatedAt] = useState('');
   const [elapsed, setElapsed] = useState(0);
+  const [connected, setConnected] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
+  const prevRef = useRef<string>('');
 
   useEffect(() => {
-    const fetchStatus = () => {
-      fetch('/api/agents/status')
-        .then(r => r.json())
-        .then(data => {
-          setAgents(data.agents);
-          setPipeline(data.pipeline);
-          const running = data.agents.filter((a: AgentInfo) => a.status === 'running').length;
-          if (running > 0) {
-            setLogs(prev => {
-              const last = prev[prev.length - 1];
-              const entry = `[${new Date().toLocaleTimeString()}] 🔄 ${running} agent(s) active · pipeline: ${Object.values(data.pipeline).filter(Boolean).length}/4 done`;
-              if (entry !== last) return [...prev.slice(-49), entry];
-              return prev;
-            });
+    const timer = setInterval(() => setElapsed(prev => prev + 1), 1000);
+
+    // SSE connection
+    const es = new EventSource('/api/agents/events');
+    es.onopen = () => setConnected(true);
+    es.onerror = () => setConnected(false);
+
+    es.addEventListener('message', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        setAgents(data.agents || []);
+        setUpdatedAt(data.updatedAt || '');
+
+        const snapshot = JSON.stringify(data.agents?.map((a: AgentInfo) => a.id + a.status));
+        if (snapshot !== prevRef.current && prevRef.current) {
+          const changed = data.agents?.filter((a: AgentInfo) => a.status === 'running');
+          if (changed?.length) {
+            const now = new Date().toLocaleTimeString();
+            setLogs(prev => [...prev.slice(-49), `[${now}] 🔄 ${changed.map((a: AgentInfo) => a.name).join(', ')} — running`]);
           }
-        });
-    };
-    fetchStatus();
-    const timer = setInterval(fetchStatus, 5000);
-    const elapsedTimer = setInterval(() => setElapsed(prev => prev + 1), 1000);
-    return () => { clearInterval(timer); clearInterval(elapsedTimer); };
+        }
+        prevRef.current = snapshot;
+      } catch {}
+    });
+
+    return () => { clearInterval(timer); es.close(); };
   }, []);
 
   const completed = agents.filter(a => a.status === 'completed').length;
   const running = agents.filter(a => a.status === 'running').length;
-  const pipelineSteps = ['📋 PM', '✍️ User', '🔍 QA', '⚙️ Dev', '✅ Done'];
+  const total = agents.length;
+  const round1Done = ['pm','user','qa','dev-r1'].every(id => agents.find(a => a.id === id)?.status === 'completed');
+  const round2Done = ['dev-r2a','dev-r2b','dev-r2c'].every(id => agents.find(a => a.id === id)?.status === 'completed');
+  const allDone = completed === total && total > 0;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">🤖 Agent 工作台</h1>
-          <p className="text-gray-500 text-sm mt-1">实时监控 · 多Agent协同 · 5秒自动刷新</p>
+          <p className="text-gray-500 text-sm mt-1">
+            SSE 实时推送 · 2秒检测
+            <span className={`inline-block w-2 h-2 rounded-full ml-2 ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className="text-xs ml-1">{connected ? '已连接' : '重连中...'}</span>
+          </p>
         </div>
         <div className="flex gap-4 text-sm">
-          <StatBox value={running} label="运行中" color="text-green-600" />
-          <StatBox value={completed} label="已完成" color="text-indigo-600" />
-          <StatBox value={`${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`} label="运行时长" color="text-gray-600" />
+          <StatBox value={completed} label="完成" color="text-green-600" />
+          <StatBox value={running} label="运行中" color="text-indigo-600" />
+          <StatBox value={`${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')}`} label="时长" color="text-gray-600" />
         </div>
       </div>
 
-      {/* Pipeline */}
-      <div className="flex items-center gap-2 mb-8 p-4 bg-white border border-gray-200 rounded-2xl">
-        {pipelineSteps.map((step, i) => {
-          const key = ['pm','user','qa','dev','done'][i];
-          const done = key === 'done' ? completed === 4 : pipeline[key as keyof typeof pipeline];
+      {/* Round indicators */}
+      <div className="flex gap-3 mb-6">
+        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${round1Done ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          🔄 第一轮 {round1Done ? '✅' : '···'}
+        </div>
+        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${round2Done ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          🔄 第二轮 {round2Done ? '✅' : '···'}
+        </div>
+        <div className={`flex-1 rounded-xl p-3 text-center text-sm font-medium ${allDone ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          🎯 全部完成 {allDone ? '✅' : '···'}
+        </div>
+      </div>
+
+      {/* Agent Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {agents.map(agent => {
+          const st = STATUS_MAP[agent.status] || STATUS_MAP.pending;
           return (
-            <div key={i} className="flex items-center gap-2 flex-1">
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${
-                done ? 'bg-green-100 text-green-700' :
-                i === Object.values(pipeline).filter(Boolean).length ? 'bg-indigo-100 text-indigo-700' :
-                'bg-gray-100 text-gray-500'
-              }`}>
-                {step}
-                {!done && i < 4 && <span className="inline-block w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
+            <div key={agent.id} className={`bg-white border rounded-2xl p-4 shadow-sm transition-all ${st.ring}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{agent.icon}</span>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm">{agent.name}</h3>
+                    <p className="text-xs text-gray-500">{agent.model}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {agent.status === 'running' && (
+                    <span className="flex gap-1">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </span>
+                  )}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${st.bg} ${st.color}`}>
+                    {st.label}
+                  </span>
+                </div>
               </div>
-              {i < 4 && <div className={`flex-1 h-0.5 ${done ? 'bg-green-300' : 'bg-gray-200'}`} />}
+              <p className="text-xs text-gray-600 mt-2">{agent.task}</p>
+              {agent.updatedAt && (
+                <p className="text-[10px] text-gray-400 mt-1">
+                  {new Date(agent.updatedAt).toLocaleTimeString('zh-CN')}
+                </p>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Agent Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {agents.map(agent => (
-          <div key={agent.id} className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${
-            agent.status === 'running' ? 'border-green-300 ring-1 ring-green-200' :
-            agent.status === 'completed' ? 'border-gray-200' :
-            agent.status === 'failed' ? 'border-red-200 opacity-60' : 'border-gray-200 opacity-70'
-          }`}>
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{agent.icon}</span>
-                <div>
-                  <h3 className="font-bold text-gray-900">{agent.name}</h3>
-                  <p className="text-xs text-gray-500">{agent.role} · {agent.model}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {agent.outputSize > 0 && (
-                  <span className="text-xs text-gray-400">{(agent.outputSize / 1024).toFixed(1)}KB</span>
-                )}
-                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                  agent.status === 'running' ? 'bg-green-100 text-green-700' :
-                  agent.status === 'completed' ? 'bg-gray-100 text-gray-600' :
-                  agent.status === 'failed' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'
-                }`}>
-                  {STATUS_LABELS[agent.status]}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-sm text-gray-600 mb-3">{agent.task}</p>
-
-            {agent.status === 'running' && (
-              <div className="flex items-center gap-2 text-xs text-green-600">
-                <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                处理中... {agent.outputSize > 0 ? `已产出 ${(agent.outputSize / 1024).toFixed(1)}KB` : ''}
-              </div>
-            )}
-            {agent.status === 'completed' && agent.completedAt && (
-              <div className="text-xs text-gray-400">
-                完成于 {new Date(agent.completedAt).toLocaleTimeString('zh-CN')}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Log */}
-      <div className="mt-6 bg-gray-900 rounded-2xl p-5 font-mono text-xs h-48 overflow-y-auto shadow-inner">
-        <div className="text-gray-500 mb-2">$ agent-pipeline log --follow</div>
-        <div className="text-green-400/60">[{new Date(Date.now() - 1800000).toLocaleTimeString()}] Pipeline initialized: PM → User → QA → Dev → Done</div>
+      {/* Logs */}
+      <div className="mt-6 bg-gray-900 rounded-2xl p-4 font-mono text-xs h-40 overflow-y-auto">
+        <div className="text-gray-500 mb-2">$ journalctl -f -u agent-pipeline</div>
+        {logs.length === 0 && <div className="text-green-400/50">等待事件...</div>}
         {logs.map((l, i) => <div key={i} className="text-green-400">{l}</div>)}
         <div className="animate-pulse text-gray-500">_</div>
       </div>
 
       <div className="mt-6 flex gap-3 text-sm">
         <Link href="/" className="text-indigo-600 hover:text-indigo-700">← NovelCraft</Link>
-        {completed === 4 && <span className="text-green-600 font-medium">🎉 全部 Agent 已完成！</span>}
+        {allDone && <span className="text-green-600 font-medium">🎉 全部分析完成，可以开始第三轮开发</span>}
+        {updatedAt && <span className="text-xs text-gray-400 ml-auto">更新于 {new Date(updatedAt).toLocaleTimeString('zh-CN')}</span>}
       </div>
     </div>
   );
