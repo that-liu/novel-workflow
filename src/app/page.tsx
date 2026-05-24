@@ -25,6 +25,14 @@ export default function Dashboard() {
   const [title, setTitle] = useState('');
   const [genre, setGenre] = useState('');
   const [description, setDescription] = useState('');
+  const [search, setSearch] = useState('');
+  const [filterGenre, setFilterGenre] = useState('');
+
+  const filtered = projects.filter(p => {
+    if (search && !p.title.includes(search) && !p.description.includes(search)) return false;
+    if (filterGenre && p.genre !== filterGenre) return false;
+    return true;
+  });
 
   useEffect(() => { listProjects().then(setProjects); }, []);
 
@@ -38,6 +46,9 @@ export default function Dashboard() {
       notes: '',
       characters: [],
       chapters: [],
+      worldSettings: { era: '', geography: '', magic: '', society: '', factions: '', rules: '' },
+      timelineEvents: [],
+      targetWords: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -128,6 +139,17 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Search & Filter */}
+      {projects.length > 0 && (
+        <div className="flex gap-3 mb-4">
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 搜索项目..." className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+          <select value={filterGenre} onChange={e => setFilterGenre(e.target.value)} className="border border-gray-300 rounded-xl px-3 py-2 text-sm">
+            <option value="">全部类型</option>
+            {GENRES.filter(Boolean).map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+      )}
+
       {/* Project list */}
       {projects.length === 0 && !showCreate ? (
         <div className="text-center py-16">
@@ -140,7 +162,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map(p => <ProjectCard key={p.id} novel={p} onDelete={remove} />)}
+          {filtered.map(p => <ProjectCard key={p.id} novel={p} onDelete={remove} />)}
         </div>
       )}
     </div>

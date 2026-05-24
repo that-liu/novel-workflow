@@ -33,7 +33,9 @@ export default function CharacterForm({
         else if (p.startsWith('个性特点')) update('personality', content);
         else update('personality', p.trim());
       });
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      alert('AI 生成失败：' + (e instanceof Error ? e.message : '未知错误'));
+    }
     setGenerating(false);
   };
 

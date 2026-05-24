@@ -1,14 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Novel } from '@/lib/types';
+import { Novel, WorldSetting } from '@/lib/types';
 import { getProject, saveProject } from '@/lib/storage';
 import AIChat from '@/components/AIChat';
 import Link from 'next/link';
-
-interface WorldSetting {
-  era: string; geography: string; magic: string; society: string; factions: string; rules: string;
-}
 
 const FIELD_DEFS: { key: keyof WorldSetting; label: string; placeholder: string; icon: string }[] = [
   { key: 'era', label: '时代背景', placeholder: '古代/现代/未来？科技水平？关键历史事件？', icon: '🏛️' },
@@ -22,22 +18,23 @@ const FIELD_DEFS: { key: keyof WorldSetting; label: string; placeholder: string;
 export default function WorldPage() {
   const { id } = useParams<{ id: string }>();
   const [novel, setNovel] = useState<Novel | null>(null);
-  const [settings, setSettings] = useState<WorldSetting>(() => {
-    try { return JSON.parse(localStorage.getItem(`world_${id}`) || '{}'); } catch { return {}; }
-  });
+  const [settings, setSettings] = useState<WorldSetting>({} as WorldSetting);
 
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
 
+  useEffect(() => {
+    if (novel?.worldSettings) {
+      setSettings(novel.worldSettings);
+    }
+  }, [novel]);
+
   const update = (key: keyof WorldSetting, value: string) => {
-    const updated = { ...settings, [key]: value };
-    setSettings(updated);
-    localStorage.setItem(`world_${id}`, JSON.stringify(updated));
+    setSettings(prev => ({ ...prev, [key]: value }));
   };
 
   const saveAll = () => {
     if (!novel) return;
-    const worldSummary = Object.entries(settings).filter(([, v]) => v).map(([k, v]) => `【${FIELD_DEFS.find(f => f.key === k)?.label || k}】${v}`).join('\n');
-    const updated = { ...novel, notes: novel.notes ? novel.notes.split('---')[0].trim() + '\n\n---\n世界观：\n' + worldSummary : '世界观：\n' + worldSummary, updatedAt: new Date().toISOString() };
+    const updated = { ...novel, worldSettings: settings, updatedAt: new Date().toISOString() };
     setNovel(updated);
     saveProject(updated);
   };

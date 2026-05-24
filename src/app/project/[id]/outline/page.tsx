@@ -35,6 +35,8 @@ export default function OutlinePage() {
   };
 
   const removeChapter = (chId: string) => {
+    const ch = novel.chapters.find(c => c.id === chId);
+    if (!window.confirm(`确定要删除章节「${ch?.title || '第' + ch?.order + '章'}」吗？此操作不可撤销。`)) return;
     updateAndSave(novel.chapters.filter(c => c.id !== chId).map((c, i) => ({ ...c, order: i + 1 })));
   };
 
@@ -57,7 +59,9 @@ export default function OutlinePage() {
         }
       }
       if (newChapters.length > 0) updateAndSave([...novel.chapters, ...newChapters]);
-    } catch { /* ignore */ }
+    } catch (e) {
+      alert('AI 生成大纲失败：' + (e instanceof Error ? e.message : '未知错误'));
+    }
     setGenerating(false);
   };
 

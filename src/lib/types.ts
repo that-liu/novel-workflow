@@ -18,6 +18,23 @@ export interface Chapter {
   summary: string;
 }
 
+export interface WorldSetting {
+  era: string;
+  geography: string;
+  magic: string;
+  society: string;
+  factions: string;
+  rules: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  time: string;
+  title: string;
+  description: string;
+  chapterRef: string;
+}
+
 export interface Novel {
   id: string;
   title: string;
@@ -26,6 +43,9 @@ export interface Novel {
   notes: string;
   characters: Character[];
   chapters: Chapter[];
+  worldSettings: WorldSetting;
+  timelineEvents: TimelineEvent[];
+  targetWords: number;
   createdAt: string;
   updatedAt: string;
 }

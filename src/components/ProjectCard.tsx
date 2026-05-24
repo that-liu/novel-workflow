@@ -15,7 +15,7 @@ export default function ProjectCard({ novel, onDelete }: { novel: Novel; onDelet
         <Link href={`/project/${novel.id}`} className="text-lg font-semibold text-gray-900 hover:text-indigo-600">
           {novel.title || '未命名作品'}
         </Link>
-        <button onClick={() => onDelete(novel.id)} className="text-gray-400 hover:text-red-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity" title="删除">✕</button>
+        <button onClick={() => { if (window.confirm(`确定要删除项目「${novel.title || '未命名'}」吗？此操作不可撤销。`)) onDelete(novel.id); }} className="text-gray-400 hover:text-red-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity" title="删除">✕</button>
       </div>
       <div className="text-sm text-gray-500 mb-3">
         {novel.genre ? <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded mr-2">{novel.genre}</span> : null}

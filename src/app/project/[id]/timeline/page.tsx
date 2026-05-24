@@ -1,30 +1,30 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Novel } from '@/lib/types';
+import { Novel, TimelineEvent } from '@/lib/types';
 import { getProject, saveProject } from '@/lib/storage';
 import Link from 'next/link';
-
-interface TimelineEvent {
-  id: string;
-  time: string;
-  title: string;
-  description: string;
-  chapterRef: string;
-}
 
 export default function TimelinePage() {
   const { id } = useParams<{ id: string }>();
   const [novel, setNovel] = useState<Novel | null>(null);
-  const [events, setEvents] = useState<TimelineEvent[]>(() => {
-    try { return JSON.parse(localStorage.getItem(`timeline_${id}`) || '[]'); } catch { return []; }
-  });
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
 
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
 
+  useEffect(() => {
+    if (novel?.timelineEvents) {
+      setEvents(novel.timelineEvents);
+    }
+  }, [novel]);
+
   const save = (evts: TimelineEvent[]) => {
     setEvents(evts);
-    localStorage.setItem(`timeline_${id}`, JSON.stringify(evts));
+    if (novel) {
+      const updated = { ...novel, timelineEvents: evts, updatedAt: new Date().toISOString() };
+      setNovel(updated);
+      saveProject(updated);
+    }
   };
 
   const addEvent = () => {

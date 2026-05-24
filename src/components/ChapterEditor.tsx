@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Chapter } from '@/lib/types';
 import { callAI } from '@/lib/ai';
 
@@ -22,20 +22,45 @@ export default function ChapterEditor({
   const [loading, setLoading] = useState('');
   const [aiInstruction, setAiInstruction] = useState('');
   const [wordGoal, setWordGoal] = useState(2000);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const lastSavedRef = useRef(chapter.content);
+  const chapterRef = useRef(chapter);
+  chapterRef.current = chapter;
 
   const wordCount = content.replace(/\s/g, '').length;
   const progress = Math.min(100, Math.round((wordCount / wordGoal) * 100));
 
+  const doSave = useCallback(() => {
+    const curContent = content;
+    if (curContent === lastSavedRef.current) return;
+    setSaveStatus('saving');
+    onSave({ ...chapterRef.current, content: curContent, wordCount: curContent.replace(/\s/g, '').length, updatedAt: new Date().toISOString() } as Chapter & { updatedAt: string });
+    lastSavedRef.current = curContent;
+    setTimeout(() => setSaveStatus('saved'), 200);
+  }, [content, onSave]);
+
+  // Auto-save with 3-second debounce
+  useEffect(() => {
+    if (content === lastSavedRef.current) {
+      setSaveStatus('saved');
+      return;
+    }
+    setSaveStatus('unsaved');
+    const timer = setTimeout(doSave, 3000);
+    return () => clearTimeout(timer);
+  }, [content, doSave]);
+
+  // Ctrl+S manual save
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        onSave({ ...chapter, content, wordCount, updatedAt: new Date().toISOString() } as Chapter & { updatedAt: string });
+        doSave();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [content, chapter]);
+  }, [doSave]);
 
   const aiAction = async (mode: string) => {
     setLoading(mode);
@@ -59,7 +84,9 @@ export default function ChapterEditor({
       } else {
         setContent(prev => prev + '\n\n---\n🔍 AI审稿建议：\n' + result);
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      alert('AI 操作失败：' + (e instanceof Error ? e.message : '未知错误'));
+    }
     setLoading('');
     setAiInstruction('');
   };
@@ -72,6 +99,9 @@ export default function ChapterEditor({
             <h3 className="font-semibold text-gray-800 text-lg">{chapter.title}</h3>
             <span className={`text-xs px-2 py-0.5 rounded-full ${chapter.status === 'done' ? 'bg-green-100 text-green-700' : chapter.status === 'writing' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
               {chapter.status === 'done' ? '✅ 已完成' : chapter.status === 'writing' ? '✍️ 写作中' : '📝 草稿'}
+            </span>
+            <span className={`text-xs ml-2 ${saveStatus === 'saved' ? 'text-green-500' : saveStatus === 'saving' ? 'text-amber-500' : 'text-red-500'}`}>
+              {saveStatus === 'saved' ? '已保存' : saveStatus === 'saving' ? '保存中...' : '未保存'}
             </span>
           </div>
           <div className="flex items-center gap-3">

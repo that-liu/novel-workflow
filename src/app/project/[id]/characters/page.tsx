@@ -29,6 +29,8 @@ export default function CharactersPage() {
   };
 
   const remove = (charId: string) => {
+    const char = novel.characters.find(c => c.id === charId);
+    if (!window.confirm(`确定要删除角色「${char?.name || charId}」吗？此操作不可撤销。`)) return;
     const updated = { ...novel, characters: novel.characters.filter(c => c.id !== charId) };
     setNovel(updated);
     saveProject(updated);

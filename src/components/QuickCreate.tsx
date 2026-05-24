@@ -58,7 +58,10 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
                 setPreview(prev => {
                   const updated = { ...prev };
                   if (msg.phase === 'meta') Object.assign(updated, msg.data);
-                  if (msg.phase === 'world') updated.notes = Object.entries(msg.data as Record<string, string>).map(([k, v]) => `【${k}】${v}`).join('\n');
+                  if (msg.phase === 'world') {
+                    updated.notes = Object.entries(msg.data as Record<string, string>).map(([k, v]) => `【${k}】${v}`).join('\n');
+                    updated.worldSettings = msg.data as Novel['worldSettings'];
+                  }
                   if (msg.phase === 'characters') updated.characters = msg.data as Novel['characters'];
                   if (msg.phase === 'outline') updated.chapters = msg.data as Novel['chapters'];
                   return updated;
@@ -84,6 +87,9 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
       notes: preview.notes || '',
       characters: preview.characters || [],
       chapters: preview.chapters || [],
+      worldSettings: preview.worldSettings || {} as Novel['worldSettings'],
+      timelineEvents: preview.timelineEvents || [],
+      targetWords: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

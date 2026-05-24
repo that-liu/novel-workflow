@@ -1,9 +1,18 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Novel } from '@/lib/types';
+import { Novel, TimelineEvent } from '@/lib/types';
 import { getProject } from '@/lib/storage';
 import Link from 'next/link';
+
+const WORLD_LABELS: Record<string, string> = {
+  era: '时代背景',
+  geography: '地理环境',
+  magic: '力量体系',
+  society: '社会结构',
+  factions: '势力派系',
+  rules: '核心法则',
+};
 
 export default function StoryBible() {
   const { id } = useParams<{ id: string }>();
@@ -15,8 +24,8 @@ export default function StoryBible() {
 
   const sortedChapters = [...novel.chapters].sort((a, b) => a.order - b.order);
   const totalWords = sortedChapters.reduce((s, c) => s + c.wordCount, 0);
-  const worldSettings = novel.notes?.includes('世界观') ? novel.notes.split('世界观：')[1]?.split('---')[0]?.trim() : '';
-  const timelineEvents = (() => { try { return JSON.parse(localStorage.getItem(`timeline_${id}`) || '[]'); } catch { return []; } })();
+  const worldSettings = novel.worldSettings;
+  const timelineEvents: TimelineEvent[] = novel.timelineEvents || [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -38,20 +47,16 @@ export default function StoryBible() {
       </section>
 
       {/* World */}
-      {worldSettings && (
+      {worldSettings && Object.entries(worldSettings).some(([, v]) => v) && (
         <section className="bg-white border border-gray-200 rounded-2xl p-6 mb-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-800 mb-3">🌌 世界观</h2>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            {worldSettings.split('\n').filter(Boolean).map((line, i) => {
-              const [key, ...val] = line.replace(/【】/g, '').split('】');
-              const cleanKey = (key || '').replace(/【/g, '');
-              return (
-                <div key={i} className="bg-gray-50 rounded-xl p-3">
-                  <span className="font-semibold text-gray-700">{cleanKey}</span>
-                  <p className="text-gray-600 mt-1">{val.join('】')}</p>
-                </div>
-              );
-            })}
+            {Object.entries(worldSettings).filter(([, v]) => v).map(([key, value]) => (
+              <div key={key} className="bg-gray-50 rounded-xl p-3">
+                <span className="font-semibold text-gray-700">{WORLD_LABELS[key] || key}</span>
+                <p className="text-gray-600 mt-1">{value as string}</p>
+              </div>
+            ))}
           </div>
         </section>
       )}
