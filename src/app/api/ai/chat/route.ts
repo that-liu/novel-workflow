@@ -11,7 +11,9 @@ const AVAILABLE_MODELS = [
 ];
 
 export async function POST(req: NextRequest) {
-  const { systemPrompt, messages, model } = await req.json();
+  let systemPrompt: string, messages: unknown[], model: string | undefined;
+  try { const body = await req.json(); systemPrompt = body.systemPrompt; messages = body.messages; model = body.model; }
+  catch { return new Response(JSON.stringify({ text: '请求体必须是合法的 JSON' }), { status: 400, headers: { 'Content-Type': 'application/json' } }); }
   const selectedModel = model && AVAILABLE_MODELS.includes(model) ? model : DEFAULT_MODEL;
 
   const body = {

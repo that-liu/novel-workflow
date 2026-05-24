@@ -25,7 +25,9 @@ async function callAI(system: string, prompt: string, model?: string): Promise<s
 }
 
 export async function POST(req: NextRequest) {
-  const { novel, chapters } = await req.json();
+  let novel: unknown, chapters: unknown[];
+  try { const body = await req.json(); novel = body.novel; chapters = body.chapters; }
+  catch { return new Response(JSON.stringify({ error: '请求体必须是合法的 JSON' }), { status: 400, headers: { 'Content-Type': 'application/json' } }); }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

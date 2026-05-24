@@ -29,7 +29,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   ensureDataDir();
-  const novel: Novel = await req.json();
+  let novel: Novel;
+  try { novel = await req.json(); }
+  catch { return NextResponse.json({ error: '请求体必须是合法的 JSON' }, { status: 400 }); }
   novel.updatedAt = new Date().toISOString();
   fs.writeFileSync(getFilePath(novel.id), JSON.stringify(novel, null, 2));
   return NextResponse.json({ ok: true });

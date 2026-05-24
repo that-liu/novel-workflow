@@ -32,7 +32,9 @@ const PHASES = [
 ];
 
 export async function POST(req: NextRequest) {
-  const { idea, model } = await req.json();
+  let idea: string, model: string | undefined;
+  try { const body = await req.json(); idea = body.idea; model = body.model; }
+  catch { return new Response(JSON.stringify({ error: '请求体必须是合法的 JSON' }), { status: 400, headers: { 'Content-Type': 'application/json' } }); }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
