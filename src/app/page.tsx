@@ -89,7 +89,41 @@ export default function Dashboard() {
 
       {/* Multi-Agent Panel */}
       <div className="mb-8">
-        <MultiAgentPanel onComplete={() => {}} />
+        <MultiAgentPanel onComplete={async (results, idea) => {
+          const plot = results.plot || '';
+          const title = plot.match(/《(.+?)》/)?.[1] || idea?.slice(0, 20) || '未命名';
+          // Parse narrative into chapters
+          const narrative = results.narrative || '';
+          const chapterMatches = narrative.split(/(?:第[一二三四五六七八九十\d]+章|Chapter\s+\d+)/gi).filter(Boolean);
+          const chapterTitles = narrative.match(/(?:第[一二三四五六七八九十\d]+章|Chapter\s+\d+)[^\n]*/gi) || [];
+          const chapters = chapterTitles.map((t, i) => ({
+            id: Date.now().toString() + 200 + i,
+            title: t.trim().slice(0, 50),
+            content: (chapterMatches[i] || '').trim(),
+            order: i + 1,
+            status: 'done' as const,
+            wordCount: (chapterMatches[i] || '').replace(/\s/g, '').length,
+            summary: '',
+          }));
+
+          const novel: Novel = {
+            id: Date.now().toString(),
+            title,
+            genre: '',
+            description: plot.split('\n')[0]?.slice(0, 100) || idea?.slice(0, 100) || '',
+            notes: `【策划Agent输出】\n${results.plot || ''}\n\n【角色Agent输出】\n${results.character || ''}\n\n【审稿Agent输出】\n${results.editor || ''}`,
+            characters: [],
+            chapters,
+            worldSettings: { era: '', geography: '', magic: '', society: '', factions: '', rules: '' },
+            timelineEvents: [],
+            targetWords: 0,
+            status: 'planning',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          await saveProject(novel);
+          setProjects(prev => [novel, ...prev]);
+        }} />
       </div>
 
       {/* Guide */}

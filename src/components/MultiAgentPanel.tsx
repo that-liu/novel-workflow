@@ -13,7 +13,7 @@ const AGENTS = [
   { id: 'editor', name: '审稿', icon: '🔍', desc: '审查与润色' },
 ];
 
-export default function MultiAgentPanel({ onComplete }: { onComplete: (results: Record<string, string>) => void }) {
+export default function MultiAgentPanel({ onComplete }: { onComplete: (results: Record<string, string>, idea: string) => void }) {
   const [idea, setIdea] = useState('');
   const [agents, setAgents] = useState<AgentState[]>(
     AGENTS.map(a => ({ ...a, status: 'waiting' as const }))
@@ -52,7 +52,7 @@ export default function MultiAgentPanel({ onComplete }: { onComplete: (results: 
             const msg = JSON.parse(line.slice(6));
             if (msg.status === 'complete') {
               setResults(msg.results || {});
-              onComplete(msg.results || {});
+              onComplete(msg.results || {}, idea);
               setRunning(false);
               continue;
             }
