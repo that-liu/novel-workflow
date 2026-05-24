@@ -1,8 +1,7 @@
 'use client';
-import { useState } from 'react';
-import { Novel } from '@/lib/types';
+import { useState, useRef } from 'react';
+import { Novel, Chapter } from '@/lib/types';
 import { saveProject } from '@/lib/storage';
-import AutoWrite from '@/components/AutoWrite';
 
 const PHASES = [
   { key: 'meta', label: '生成作品信息', icon: '📖' },
@@ -18,28 +17,37 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
   const [donePhases, setDonePhases] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
   const [preview, setPreview] = useState<Partial<Novel>>({});
+  const [cancelled, setCancelled] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const startGeneration = async () => {
     if (!idea.trim() || running) return;
     setRunning(true);
+    setCancelled(false);
     setError('');
     setDonePhases(new Set());
     setPreview({});
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       const resp = await fetch('/api/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idea: idea.trim() }),
+        signal: controller.signal,
       });
+
+      if (controller.signal.aborted) return;
       if (!resp.ok) throw new Error('API error');
 
       const reader = resp.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      const collected: Record<string, unknown> = {};
 
       while (reader) {
+        if (controller.signal.aborted) return;
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
@@ -49,12 +57,11 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
           if (line.startsWith('data: ')) {
             try {
               const msg = JSON.parse(line.slice(6));
-              if (msg.phase === 'error') { setError(msg.error); setRunning(false); return; }
+              if (msg.phase === 'error') { setError(msg.error); setRunning(false); setCancelled(false); return; }
               if (msg.phase === 'complete') { setRunning(false); continue; }
               setPhase(msg.phase);
               if (msg.status === 'done') {
                 setDonePhases(prev => new Set(prev).add(msg.phase));
-                collected[msg.phase] = msg.data;
                 setPreview(prev => {
                   const updated = { ...prev };
                   if (msg.phase === 'meta') Object.assign(updated, msg.data);
@@ -73,9 +80,16 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
       }
       setRunning(false);
     } catch (e) {
+      if (controller.signal.aborted) return;
       setError((e as Error).message);
       setRunning(false);
     }
+  };
+
+  const handleCancel = () => {
+    abortRef.current?.abort();
+    setCancelled(true);
+    setRunning(false);
   };
 
   const finishAndSave = async () => {
@@ -99,16 +113,56 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
     setIdea('');
     setDonePhases(new Set());
     setPreview({});
+    setCancelled(false);
   };
 
+  const resetAll = () => {
+    setIdea('');
+    setDonePhases(new Set());
+    setPreview({});
+    setCancelled(false);
+    setError('');
+  };
+
+  const hasPartialData = donePhases.size > 0 || cancelled;
   const allDone = donePhases.size === PHASES.length;
+  const showProgressOrPreview = running || allDone || cancelled || (hasPartialData && !allDone);
+
+  // Editable preview helpers
+  const updateTitle = (title: string) => setPreview(prev => ({ ...prev, title }));
+  const updateGenre = (genre: string) => setPreview(prev => ({ ...prev, genre }));
+  const updateDescription = (description: string) => setPreview(prev => ({ ...prev, description }));
+
+  const updateCharName = (index: number, name: string) => {
+    setPreview(prev => {
+      const chars = [...(prev.characters || [])];
+      if (chars[index]) chars[index] = { ...chars[index], name };
+      return { ...prev, characters: chars };
+    });
+  };
+
+  const updateCharRole = (index: number, role: string) => {
+    setPreview(prev => {
+      const chars = [...(prev.characters || [])];
+      if (chars[index]) chars[index] = { ...chars[index], role };
+      return { ...prev, characters: chars };
+    });
+  };
+
+  const updateChapterTitle = (index: number, title: string) => {
+    setPreview(prev => {
+      const chapters = [...(prev.chapters || [])];
+      if (chapters[index]) chapters[index] = { ...chapters[index], title };
+      return { ...prev, chapters };
+    });
+  };
 
   return (
     <div className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-200 rounded-2xl p-6 mb-8 shadow-sm">
       <h2 className="text-lg font-bold text-gray-900 mb-2">🚀 一句话成书</h2>
       <p className="text-sm text-gray-500 mb-4">输入你的故事创意，AI 自动生成完整小说项目</p>
 
-      {!running && !allDone && (
+      {!showProgressOrPreview && (
         <div className="flex gap-3">
           <textarea
             value={idea}
@@ -131,7 +185,7 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
         </div>
       )}
 
-      {(running || allDone) && (
+      {showProgressOrPreview && (
         <div className="space-y-4">
           {/* Progress steps */}
           <div className="flex gap-2">
@@ -143,7 +197,7 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
                 <div className="text-lg">{p.icon}</div>
                 <div className="text-xs font-medium mt-1 text-gray-700">{p.label}</div>
                 <div className="text-[10px] text-gray-400 mt-0.5">
-                  {phase === p.key ? '⏳ 生成中...' : donePhases.has(p.key) ? '✅ 完成' : '等待中'}
+                  {phase === p.key ? '⏳ 生成中...' : donePhases.has(p.key) ? '✅ 完成' : cancelled ? '⏹️ 已取消' : '等待中'}
                 </div>
               </div>
             ))}
@@ -153,41 +207,107 @@ export default function QuickCreate({ onCreated }: { onCreated: (novel: Novel) =
             <div className="bg-red-50 text-red-700 p-3 rounded-xl text-sm">{error}</div>
           )}
 
-          {/* Preview */}
-          {allDone && (
+          {/* Cancel button during generation */}
+          {running && (
+            <button
+              onClick={handleCancel}
+              className="w-full bg-red-500 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-600 shadow-sm transition-colors"
+            >
+              ⏹ 取消生成
+            </button>
+          )}
+
+          {/* Preview with editable fields */}
+          {(allDone || cancelled || hasPartialData) && !running && (
             <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-sm">
-              <h3 className="font-bold text-lg">{preview.title || '未命名'} {preview.genre && <span className="text-sm font-normal bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">{preview.genre}</span>}</h3>
-              {preview.description && <p className="text-sm text-gray-600">{preview.description}</p>}
-              {preview.characters && (
+              {/* Title + Genre — editable */}
+              <div className="flex items-center gap-3">
+                <input
+                  value={preview.title || ''}
+                  onChange={e => updateTitle(e.target.value)}
+                  className="font-bold text-lg border-b border-gray-200 focus:border-indigo-500 focus:outline-none px-1 py-0.5 flex-1"
+                  placeholder="作品名称"
+                />
+                <select
+                  value={preview.genre || ''}
+                  onChange={e => updateGenre(e.target.value)}
+                  className="text-sm border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-600"
+                >
+                  <option value="">选择类型</option>
+                  <option>玄幻</option><option>言情</option><option>悬疑</option><option>科幻</option>
+                  <option>武侠</option><option>都市</option><option>历史</option><option>奇幻</option>
+                  <option>恐怖</option><option>轻小说</option>
+                </select>
+              </div>
+
+              {/* Description — editable */}
+              <textarea
+                value={preview.description || ''}
+                onChange={e => updateDescription(e.target.value)}
+                className="w-full text-sm text-gray-600 border border-gray-200 rounded-lg p-2 resize-none h-20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="作品简介..."
+              />
+
+              {/* Characters — editable names and roles */}
+              {preview.characters && preview.characters.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 mb-1">角色 ({preview.characters.length})</p>
                   <div className="flex gap-2 flex-wrap">
                     {preview.characters.map((c, i) => (
-                      <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded-full">{c.name} · {c.role}</span>
+                      <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded-full inline-flex items-center gap-1">
+                        <input
+                          value={c.name}
+                          onChange={e => updateCharName(i, e.target.value)}
+                          className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-indigo-500 focus:outline-none w-16 text-center"
+                        />
+                        <span className="text-gray-400">·</span>
+                        <input
+                          value={c.role}
+                          onChange={e => updateCharRole(i, e.target.value)}
+                          className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-indigo-500 focus:outline-none w-12 text-center"
+                        />
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
-              {preview.chapters && (
+
+              {/* Chapters — editable titles */}
+              {preview.chapters && preview.chapters.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 mb-1">章节 ({preview.chapters.length})</p>
                   <div className="grid grid-cols-2 gap-1">
                     {preview.chapters.slice(0, 6).map((ch, i) => (
-                      <div key={i} className="text-xs text-gray-600">第{i + 1}章 {ch.title}</div>
+                      <div key={i} className="flex items-center gap-1 text-xs text-gray-600">
+                        <span className="shrink-0">第{i + 1}章</span>
+                        <input
+                          value={ch.title}
+                          onChange={e => updateChapterTitle(i, e.target.value)}
+                          className="border-b border-transparent hover:border-gray-300 focus:border-indigo-500 focus:outline-none flex-1 min-w-0"
+                        />
+                      </div>
                     ))}
                     {preview.chapters.length > 6 && <div className="text-xs text-gray-400">...还有 {preview.chapters.length - 6} 章</div>}
                   </div>
                 </div>
               )}
+
+              {/* Action buttons */}
               <div className="flex gap-2 pt-2">
                 <button onClick={finishAndSave} className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm">
                   ✅ 保存项目，去大纲页自动写作
                 </button>
-                <button onClick={() => { setIdea(''); setDonePhases(new Set()); setPreview({}); }} className="text-sm text-gray-500 px-4 hover:text-gray-700">
-                  放弃重来
+                <button onClick={resetAll} className="text-sm text-gray-500 px-4 hover:text-gray-700 whitespace-nowrap">
+                  {cancelled ? '放弃' : '放弃重来'}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1 text-center">保存后去「情节大纲」页，点击 🤖 自动写作即可一键写完所有章节</p>
+
+              {cancelled && (
+                <p className="text-xs text-amber-600 text-center">已保留已完成的阶段数据，你可以编辑后保存，或放弃重新生成</p>
+              )}
+              {!cancelled && (
+                <p className="text-xs text-gray-400 mt-1 text-center">保存后去「情节大纲」页，点击 🤖 自动写作即可一键写完所有章节</p>
+              )}
             </div>
           )}
         </div>

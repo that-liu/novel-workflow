@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Novel } from '@/lib/types';
 import { getProject, saveProject } from '@/lib/storage';
@@ -9,7 +9,34 @@ import Link from 'next/link';
 export default function BrainstormPage() {
   const { id } = useParams<{ id: string }>();
   const [novel, setNovel] = useState<Novel | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const lastNotesRef = useRef('');
+  const novelRef = useRef(novel);
+  novelRef.current = novel;
+
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
+
+  const doSave = useCallback(() => {
+    const cur = novelRef.current;
+    if (!cur) return;
+    if (cur.notes === lastNotesRef.current) return;
+    setSaveStatus('saving');
+    saveProject(cur);
+    lastNotesRef.current = cur.notes;
+    setTimeout(() => setSaveStatus('saved'), 200);
+  }, []);
+
+  // Auto-save notes with 3-second debounce
+  useEffect(() => {
+    if (!novel) return;
+    if (novel.notes === lastNotesRef.current) {
+      setSaveStatus('saved');
+      return;
+    }
+    setSaveStatus('unsaved');
+    const timer = setTimeout(doSave, 3000);
+    return () => clearTimeout(timer);
+  }, [novel?.notes, doSave, novel]);
 
   if (!novel) return <div className="max-w-4xl mx-auto px-4 py-8 text-gray-400">加载中...</div>;
 
@@ -30,12 +57,12 @@ export default function BrainstormPage() {
             <textarea
               value={novel.notes}
               onChange={e => { const updated = { ...novel, notes: e.target.value, updatedAt: new Date().toISOString() }; setNovel(updated); }}
-              onBlur={() => saveProject(novel)}
+              onBlur={() => { saveProject(novel); lastNotesRef.current = novel.notes; setSaveStatus('saved'); }}
               className="w-full border border-gray-200 rounded-xl p-3 text-sm resize-none h-48 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="记录你的灵感、设定和想法..."
             />
-            <button onClick={() => saveProject(novel)} className="mt-2 w-full bg-indigo-50 text-indigo-700 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-100">
-              保存笔记
+            <button onClick={() => { saveProject(novel); lastNotesRef.current = novel.notes; setSaveStatus('saved'); }} className="mt-2 w-full bg-indigo-50 text-indigo-700 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-100">
+              保存笔记{saveStatus === 'unsaved' ? ' ●' : ''}{saveStatus === 'saving' ? ' ...' : ''}
             </button>
 
             <div className="mt-4 p-3 bg-amber-50 rounded-xl text-xs text-amber-700">
