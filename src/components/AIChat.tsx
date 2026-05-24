@@ -92,7 +92,6 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
           )}
         </div>
       </div>
-      </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[400px] max-h-[600px]">
         {messages.length === 0 && !streaming && (
