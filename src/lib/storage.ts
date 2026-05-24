@@ -1,7 +1,7 @@
 import { Novel } from './types';
 const API_BASE = '/api/storage';
 
-function getToken() { return typeof window !== 'undefined' ? localStorage.getItem('nc_token') : null; }
+function getToken() { if (typeof window === 'undefined') return null; return localStorage.getItem('nc_token'); }
 
 export async function listProjects(): Promise<Novel[]> {
   const res = await fetch(API_BASE, { headers: { Authorization: `Bearer ${getToken()}` } });
