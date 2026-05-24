@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { callAI, streamAIChat, ChatMessage } from '@/lib/ai';
+import { callAI, streamAIChat, ChatMessage, AI_MODELS } from '@/lib/ai';
 
 interface Message {
   role: 'user' | 'ai';
@@ -19,6 +19,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [model, setModel] = useState(AI_MODELS[0].id);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -60,7 +61,8 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
           return null;
         });
         setLoading(false);
-      }
+      },
+      model
     );
   };
 
@@ -79,9 +81,17 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
     <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white shadow-sm">
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
         <span className="text-sm font-semibold text-gray-700">{title || '🤖 AI 助手'}</span>
-        {messages.length > 0 && (
-          <button onClick={clearHistory} className="text-xs text-gray-400 hover:text-red-500">清空对话</button>
-        )}
+        <div className="flex items-center gap-2">
+          <select value={model} onChange={e => setModel(e.target.value)} className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-600">
+            {AI_MODELS.map(m => (
+              <option key={m.id} value={m.id} title={m.desc}>{m.label}</option>
+            ))}
+          </select>
+          {messages.length > 0 && (
+            <button onClick={clearHistory} className="text-xs text-gray-400 hover:text-red-500">清空</button>
+          )}
+        </div>
+      </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[400px] max-h-[600px]">
