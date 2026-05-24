@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 const BASE_URL = process.env.ANTHROPIC_BASE_URL || 'https://api.deepseek.com/anthropic';
 const API_KEY = process.env.ANTHROPIC_AUTH_TOKEN || '';
@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
   const body = {
     model: MODEL,
     max_tokens: 4096,
+    stream: true,
     system: systemPrompt,
     messages,
   };
@@ -25,10 +26,18 @@ export async function POST(req: NextRequest) {
   });
 
   if (!resp.ok) {
-    return NextResponse.json({ text: `AI 服务暂时不可用（${resp.status}）` });
+    return new Response(JSON.stringify({ text: `AI 服务暂时不可用（${resp.status}）` }), {
+      status: resp.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
-  const data = await resp.json();
-  const text = data.content?.map((c: { type: string; text?: string }) => c.text || '').join('') || '';
-  return NextResponse.json({ text });
+  // Stream the SSE response directly to the client
+  return new Response(resp.body, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }
