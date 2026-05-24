@@ -6,6 +6,7 @@ export interface Character {
   backstory: string;
   motivation: string;
   notes: string;
+  relationships?: { targetId: string; type: string; note: string }[];
 }
 
 export interface Chapter {
@@ -16,6 +17,7 @@ export interface Chapter {
   status: 'draft' | 'writing' | 'done';
   wordCount: number;
   summary: string;
+  updatedAt?: string;
 }
 
 export interface WorldSetting {
@@ -48,4 +50,5 @@ export interface Novel {
   targetWords: number;
   createdAt: string;
   updatedAt: string;
+  status?: 'planning' | 'writing' | 'completed' | 'paused';
 }

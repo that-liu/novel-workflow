@@ -80,7 +80,7 @@ export default function ChapterEditor({
       content: curContent,
       wordCount: curContent.replace(/\s/g, '').length,
       updatedAt: new Date().toISOString(),
-    } as Chapter & { updatedAt: string });
+    });
     lastSavedRef.current = curContent;
     setTimeout(() => setSaveStatus('saved'), 200);
   }, [content, onSave]);

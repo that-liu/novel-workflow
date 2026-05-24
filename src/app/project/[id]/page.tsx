@@ -66,7 +66,23 @@ export default function ProjectOverview() {
           <div>
             <div className="flex items-center justify-between">
               <h1 className="text-2xl font-bold text-gray-900">{novel.title}</h1>
-              <button onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-indigo-600">编辑信息</button>
+              <div className="flex items-center gap-3">
+                <select
+                  value={novel.status || 'planning'}
+                  onChange={e => {
+                    const updated = { ...novel, status: e.target.value as Novel['status'], updatedAt: new Date().toISOString() };
+                    setNovel(updated);
+                    saveProject(updated);
+                  }}
+                  className="border rounded-lg px-2 py-1 text-xs"
+                >
+                  <option value="planning">规划中</option>
+                  <option value="writing">写作中</option>
+                  <option value="completed">已完成</option>
+                  <option value="paused">暂停</option>
+                </select>
+                <button onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-indigo-600">编辑信息</button>
+              </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
               {novel.genre && <span className="bg-indigo-50 text-indigo-600 px-2.5 py-0.5 rounded-full text-xs font-medium">{novel.genre}</span>}

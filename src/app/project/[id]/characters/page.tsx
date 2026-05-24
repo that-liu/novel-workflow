@@ -56,7 +56,7 @@ export default function CharactersPage() {
         <div className="lg:col-span-2">
           {showForm && (
             <div className="mb-6">
-              <CharacterForm initial={editing} onSave={save} onCancel={() => { setShowForm(false); setEditing(undefined); }} />
+              <CharacterForm initial={editing} onSave={save} onCancel={() => { setShowForm(false); setEditing(undefined); }} allCharacters={novel.characters} />
             </div>
           )}
 
@@ -81,6 +81,18 @@ export default function CharactersPage() {
                   </div>
                   {char.personality && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{char.personality}</p>}
                   {char.motivation && <p className="text-xs text-gray-400 mt-1">动机：{char.motivation.slice(0, 60)}{char.motivation.length > 60 && '...'}</p>}
+                  {char.relationships && char.relationships.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {char.relationships.map((rel, i) => {
+                        const target = novel.characters.find(c => c.id === rel.targetId);
+                        return target ? (
+                          <span key={i} className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full">
+                            {target.name} · {rel.type || '关系'}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -28,7 +28,11 @@ export default function WorldPage() {
 
   useEffect(() => {
     if (novel?.worldSettings) {
-      setSettings(novel.worldSettings);
+      setSettings(prev => {
+        const prevStr = JSON.stringify(prev);
+        const newStr = JSON.stringify(novel.worldSettings);
+        return prevStr === newStr ? prev : novel.worldSettings;
+      });
     }
   }, [novel]);
 

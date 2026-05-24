@@ -47,20 +47,42 @@ export default function WritePage() {
           <Link href={`/project/${id}/outline`} className="text-sm text-gray-400 hover:text-gray-600">← 返回大纲</Link>
           <h1 className="text-xl font-bold text-gray-900">✍️ 写作 - {chapter.title}</h1>
         </div>
-        {/* Chapter selector */}
-        {novel.chapters.length > 1 && (
-          <div className="flex gap-1 flex-wrap">
-            {[...novel.chapters].sort((a, b) => a.order - b.order).map(ch => (
-              <Link
-                key={ch.id}
-                href={`/project/${id}/write?chapter=${ch.id}`}
-                className={`text-xs px-3 py-1 rounded-full ${ch.id === chapter.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+        {/* Chapter navigation: prev | dropdown | next */}
+        {novel.chapters.length > 1 && (() => {
+          const sorted = [...novel.chapters].sort((a, b) => a.order - b.order);
+          const curIdx = sorted.findIndex(ch => ch.id === chapter.id);
+          const prev = curIdx > 0 ? sorted[curIdx - 1] : null;
+          const next = curIdx < sorted.length - 1 ? sorted[curIdx + 1] : null;
+          return (
+            <div className="flex items-center gap-2">
+              {prev ? (
+                <Link href={`/project/${id}/write?chapter=${prev.id}`} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-medium">
+                  ‹ 上一章
+                </Link>
+              ) : (
+                <span className="text-xs text-gray-300 px-2.5 py-1.5">‹ 上一章</span>
+              )}
+              <select
+                value={chapter.id}
+                onChange={e => window.location.href = `/project/${id}/write?chapter=${e.target.value}`}
+                className="border rounded-lg px-2 py-1.5 text-xs bg-white"
               >
-                {ch.order}. {ch.title.slice(0, 8)}{ch.title.length > 8 && '...'}
-              </Link>
-            ))}
-          </div>
-        )}
+                {sorted.map(ch => (
+                  <option key={ch.id} value={ch.id}>
+                    第{ch.order}章 {ch.title}
+                  </option>
+                ))}
+              </select>
+              {next ? (
+                <Link href={`/project/${id}/write?chapter=${next.id}`} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-medium">
+                  下一章 ›
+                </Link>
+              ) : (
+                <span className="text-xs text-gray-300 px-2.5 py-1.5">下一章 ›</span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       <ChapterEditor chapter={chapter} onSave={updateChapter} novelContext={novelContext} />

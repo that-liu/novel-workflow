@@ -17,6 +17,8 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string; rin
 export default function AgentDashboard() {
   const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [updatedAt, setUpdatedAt] = useState('');
+  const [formattedUpdatedAt, setFormattedUpdatedAt] = useState('');
+  const [agentTimeMap, setAgentTimeMap] = useState<Record<string, string>>({});
   const [elapsed, setElapsed] = useState(0);
   const [connected, setConnected] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -35,6 +37,14 @@ export default function AgentDashboard() {
         const data = JSON.parse(e.data);
         setAgents(data.agents || []);
         setUpdatedAt(data.updatedAt || '');
+        setFormattedUpdatedAt(
+          data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString('zh-CN') : ''
+        );
+        const timeMap: Record<string, string> = {};
+        (data.agents || []).forEach((a: AgentInfo) => {
+          timeMap[a.id] = a.updatedAt ? new Date(a.updatedAt).toLocaleTimeString('zh-CN') : '';
+        });
+        setAgentTimeMap(timeMap);
 
         const snapshot = JSON.stringify(data.agents?.map((a: AgentInfo) => a.id + a.status));
         if (snapshot !== prevRef.current && prevRef.current) {
@@ -50,6 +60,16 @@ export default function AgentDashboard() {
 
     return () => { clearInterval(timer); es.close(); };
   }, []);
+
+  useEffect(() => {
+    setAgentTimeMap(prev => {
+      const next: Record<string, string> = {};
+      agents.forEach(a => {
+        next[a.id] = prev[a.id] ?? (a.updatedAt ? new Date(a.updatedAt).toLocaleTimeString('zh-CN') : '');
+      });
+      return next;
+    });
+  }, [agents]);
 
   const completed = agents.filter(a => a.status === 'completed').length;
   const running = agents.filter(a => a.status === 'running').length;
@@ -117,9 +137,9 @@ export default function AgentDashboard() {
                 </div>
               </div>
               <p className="text-xs text-gray-600 mt-2">{agent.task}</p>
-              {agent.updatedAt && (
+              {agentTimeMap[agent.id] && (
                 <p className="text-[10px] text-gray-400 mt-1">
-                  {new Date(agent.updatedAt).toLocaleTimeString('zh-CN')}
+                  {agentTimeMap[agent.id]}
                 </p>
               )}
             </div>
@@ -138,7 +158,7 @@ export default function AgentDashboard() {
       <div className="mt-6 flex gap-3 text-sm">
         <Link href="/" className="text-indigo-600 hover:text-indigo-700">← NovelCraft</Link>
         {allDone && <span className="text-green-600 font-medium">🎉 全部分析完成，可以开始第三轮开发</span>}
-        {updatedAt && <span className="text-xs text-gray-400 ml-auto">更新于 {new Date(updatedAt).toLocaleTimeString('zh-CN')}</span>}
+        {updatedAt && <span className="text-xs text-gray-400 ml-auto">更新于 {formattedUpdatedAt}</span>}
       </div>
     </div>
   );

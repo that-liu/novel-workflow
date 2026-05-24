@@ -51,6 +51,7 @@ export default function Dashboard() {
       targetWords: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      status: 'planning',
     };
     await saveProject(novel);
     setProjects(prev => [novel, ...prev]);

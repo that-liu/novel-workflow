@@ -14,7 +14,11 @@ export default function TimelinePage() {
 
   useEffect(() => {
     if (novel?.timelineEvents) {
-      setEvents(novel.timelineEvents);
+      setEvents(prev => {
+        const prevStr = JSON.stringify(prev);
+        const newStr = JSON.stringify(novel.timelineEvents);
+        return prevStr === newStr ? prev : novel.timelineEvents;
+      });
     }
   }, [novel]);
 
