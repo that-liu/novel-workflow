@@ -56,6 +56,7 @@ export default function BrainstormPage() {
             systemPrompt={brainstormPrompt}
             placeholder="输入你的想法，与 AI 讨论... (Enter 发送，Shift+Enter 换行)"
             title="🤖 AI 头脑风暴助手（支持多轮对话）"
+            memoryKey={id as string}
           />
         </div>
       </div>

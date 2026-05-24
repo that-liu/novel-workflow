@@ -13,6 +13,16 @@ const AI_MODES = [
   { id: 'review', label: '🔍 审稿', desc: '分析节奏和逻辑', color: 'orange' },
 ];
 
+const BG_MAP: Record<string, string> = {
+  indigo: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
+  amber: 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+  green: 'bg-green-50 text-green-700 hover:bg-green-100',
+  teal: 'bg-teal-50 text-teal-700 hover:bg-teal-100',
+  red: 'bg-red-50 text-red-700 hover:bg-red-100',
+  purple: 'bg-purple-50 text-purple-700 hover:bg-purple-100',
+  orange: 'bg-orange-50 text-orange-700 hover:bg-orange-100',
+};
+
 export default function ChapterEditor({
   chapter, onSave, novelContext,
 }: {
@@ -145,7 +155,7 @@ export default function ChapterEditor({
                 className={`text-left text-xs px-2.5 py-2 rounded-lg transition-colors disabled:opacity-50 ${
                   loading === mode.id
                     ? 'bg-indigo-100 text-indigo-700 ring-2 ring-indigo-300'
-                    : `bg-${mode.color}-50 text-${mode.color}-700 hover:bg-${mode.color}-100`
+                    : BG_MAP[mode.color] || 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
                 style={{
                   backgroundColor: loading === mode.id ? '#e0e7ff' : undefined,

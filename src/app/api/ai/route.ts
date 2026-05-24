@@ -5,7 +5,15 @@ const API_KEY = process.env.ANTHROPIC_AUTH_TOKEN || '';
 const MODEL = process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || 'deepseek-v4-pro';
 
 export async function POST(req: NextRequest) {
-  const { systemPrompt, userMessage } = await req.json();
+  let systemPrompt: string, userMessage: string, model: string | undefined;
+  try {
+    const body = await req.json();
+    systemPrompt = body.systemPrompt;
+    userMessage = body.userMessage;
+    model = body.model;
+  } catch {
+    return NextResponse.json({ text: '请求体必须是合法的 JSON' }, { status: 400 });
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -14,7 +22,7 @@ export async function POST(req: NextRequest) {
   };
 
   const body = {
-    model: MODEL,
+    model: model || MODEL,
     max_tokens: 4096,
     system: systemPrompt,
     messages: [{ role: 'user', content: userMessage }],

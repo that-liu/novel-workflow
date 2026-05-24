@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Novel, WorldSetting } from '@/lib/types';
 import { getProject, saveProject } from '@/lib/storage';
@@ -19,6 +19,10 @@ export default function WorldPage() {
   const { id } = useParams<{ id: string }>();
   const [novel, setNovel] = useState<Novel | null>(null);
   const [settings, setSettings] = useState<WorldSetting>({} as WorldSetting);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const lastSavedRef = useRef('');
+  const novelRef = useRef(novel);
+  novelRef.current = novel;
 
   useEffect(() => { getProject(id as string).then(setNovel); }, [id]);
 
@@ -32,11 +36,35 @@ export default function WorldPage() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
-  const saveAll = () => {
-    if (!novel) return;
-    const updated = { ...novel, worldSettings: settings, updatedAt: new Date().toISOString() };
+  const serialized = useCallback(() => JSON.stringify(settings), [settings]);
+
+  const doSave = useCallback(() => {
+    const cur = novelRef.current;
+    if (!cur) return;
+    const s = serialized();
+    if (s === lastSavedRef.current) return;
+    setSaveStatus('saving');
+    const updated = { ...cur, worldSettings: JSON.parse(s) as WorldSetting, updatedAt: new Date().toISOString() };
     setNovel(updated);
     saveProject(updated);
+    lastSavedRef.current = s;
+    setTimeout(() => setSaveStatus('saved'), 200);
+  }, [serialized]);
+
+  // Auto-save with 3-second debounce
+  useEffect(() => {
+    const s = serialized();
+    if (s === lastSavedRef.current) {
+      setSaveStatus('saved');
+      return;
+    }
+    setSaveStatus('unsaved');
+    const timer = setTimeout(doSave, 3000);
+    return () => clearTimeout(timer);
+  }, [serialized, doSave]);
+
+  const saveAll = () => {
+    doSave();
   };
 
   if (!novel) return <div className="max-w-4xl mx-auto px-4 py-8 text-gray-400">加载中...</div>;
@@ -52,7 +80,11 @@ export default function WorldPage() {
           <h1 className="text-2xl font-bold text-gray-900">🌌 世界观设定</h1>
           <p className="text-gray-500 text-sm mt-1">构建你的故事世界。完成 {filledCount}/{FIELD_DEFS.length} 项</p>
         </div>
-        <button onClick={saveAll} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700 shadow-sm">💾 保存全部</button>
+        <button onClick={saveAll} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700 shadow-sm">
+          💾 保存全部
+          {saveStatus === 'saving' && <span className="ml-1 text-indigo-200">...</span>}
+          {saveStatus === 'unsaved' && <span className="ml-1 text-amber-200">●</span>}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -74,7 +106,7 @@ export default function WorldPage() {
         </div>
 
         <div className="h-[550px]">
-          <AIChat systemPrompt={worldPrompt} title="🤖 世界观助手" placeholder="讨论你的世界观设定..." />
+          <AIChat systemPrompt={worldPrompt} title="🤖 世界观助手" placeholder="讨论你的世界观设定..." memoryKey={id as string} />
         </div>
       </div>
     </div>

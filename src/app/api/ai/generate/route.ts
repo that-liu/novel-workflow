@@ -4,7 +4,7 @@ const BASE_URL = process.env.ANTHROPIC_BASE_URL || 'https://api.deepseek.com/ant
 const API_KEY = process.env.ANTHROPIC_AUTH_TOKEN || '';
 const MODEL = process.env.ANTHROPIC_DEFAULT_OPUS_MODEL || 'deepseek-v4-pro';
 
-async function callAI(system: string, prompt: string): Promise<string> {
+async function callAI(system: string, prompt: string, model?: string): Promise<string> {
   const resp = await fetch(`${BASE_URL}/v1/messages`, {
     method: 'POST',
     headers: {
@@ -13,7 +13,7 @@ async function callAI(system: string, prompt: string): Promise<string> {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: MODEL,
+      model: model || MODEL,
       max_tokens: 4096,
       system,
       messages: [{ role: 'user', content: prompt }],
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 {"title":"小说标题","genre":"类型（玄幻/言情/悬疑/科幻/武侠/都市/历史/奇幻/轻小说）","description":"一句话简介（30字以内）"}
 
 创意：${idea}`;
-        const metaText = await callAI('你是一位资深出版编辑，擅长给小说命名和定位。只返回JSON，不要任何其他文字。', metaPrompt);
+        const metaText = await callAI('你是一位资深出版编辑，擅长给小说命名和定位。只返回JSON，不要任何其他文字。', metaPrompt, model);
         let meta;
         try {
           const jsonMatch = metaText.match(/\{[\s\S]*\}/);
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   "rules": "核心法则"
 }
 每项50-100字，用中文。只返回JSON，不要其他文字。`;
-        const worldText = await callAI('你是一位科幻/奇幻世界构建大师。只返回JSON，不要任何其他文字。', worldPrompt);
+        const worldText = await callAI('你是一位科幻/奇幻世界构建大师。只返回JSON，不要任何其他文字。', worldPrompt, model);
         let world;
         try {
           const jsonMatch = worldText.match(/\{[\s\S]*\}/);
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
   ...
 ]
 每人80-150字。只返回JSON数组，不要其他文字。`;
-        const charText = await callAI('你是一位角色设计专家。只返回JSON数组，不要任何其他文字。', charPrompt);
+        const charText = await callAI('你是一位角色设计专家。只返回JSON数组，不要任何其他文字。', charPrompt, model);
         let characters;
         try {
           const jsonMatch = charText.match(/\[[\s\S]*\]/);
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
   ...
 ]
 从第1章到第10章，有起承转合。只返回JSON数组，不要其他文字。`;
-        const outlineText = await callAI('你是一位小说结构设计师。只返回JSON数组，不要任何其他文字。', outlinePrompt);
+        const outlineText = await callAI('你是一位小说结构设计师。只返回JSON数组，不要任何其他文字。', outlinePrompt, model);
         let chapters;
         try {
           const jsonMatch = outlineText.match(/\[[\s\S]*\]/);

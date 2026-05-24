@@ -1,9 +1,19 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { Novel } from '@/lib/types';
+import { Novel, Chapter } from '@/lib/types';
 import { getProject } from '@/lib/storage';
 import Link from 'next/link';
+
+function escapeXml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+function uuidv4(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
 
 export default function ExportPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +65,107 @@ export default function ExportPage() {
     return html;
   };
 
+  const generateEpub = useCallback(async () => {
+    if (!novel) return;
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+
+    // mimetype must be first, stored uncompressed
+    zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+
+    // META-INF/container.xml
+    zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>`);
+
+    const sortedChapters: Chapter[] = [...novel.chapters].sort((a, b) => a.order - b.order);
+    const safeId = (text: string) => text.replace(/[^\w一-鿿]/g, '_').slice(0, 50) || 'chapter';
+    const chapterFiles = sortedChapters.map((ch, i) => {
+      const id = `chapter-${i + 1}`;
+      const filename = `${id}.xhtml`;
+      const htmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>${escapeXml(ch.title)}</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css"/></head>
+<body>
+  <h1>第${ch.order}章 ${escapeXml(ch.title)}</h1>
+  ${ch.summary ? `<p class="summary"><em>${escapeXml(ch.summary)}</em></p>` : ''}
+  ${ch.content.split('\n').filter(p => p.trim()).map(p => `<p>${escapeXml(p)}</p>`).join('\n  ')}
+</body>
+</html>`;
+      zip.file(`OEBPS/${filename}`, htmlContent);
+      return { id, filename, title: ch.title, order: ch.order };
+    });
+
+    // content.opf
+    const manifestItems = chapterFiles.map((cf, i) =>
+      `    <item id="${cf.id}" href="${cf.filename}" media-type="application/xhtml+xml"/>`
+    ).join('\n');
+    const spineItems = chapterFiles.map(cf =>
+      `    <itemref idref="${cf.id}"/>`
+    ).join('\n');
+
+    zip.file('OEBPS/content.opf', `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="BookId">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>${escapeXml(novel.title)}</dc:title>
+    <dc:language>zh-CN</dc:language>
+    <dc:identifier id="BookId">urn:uuid:${uuidv4()}</dc:identifier>
+    ${novel.description ? `<dc:description>${escapeXml(novel.description)}</dc:description>` : ''}
+    <meta name="cover" content=""/>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="css" href="stylesheet.css" media-type="text/css"/>
+${manifestItems}
+  </manifest>
+  <spine toc="ncx">
+${spineItems}
+  </spine>
+</package>`);
+
+    // toc.ncx
+    const navPoints = chapterFiles.map((cf, i) =>
+      `    <navPoint id="${cf.id}" playOrder="${i + 1}">
+      <navLabel><text>第${cf.order}章 ${escapeXml(cf.title)}</text></navLabel>
+      <content src="${cf.filename}"/>
+    </navPoint>`
+    ).join('\n');
+
+    zip.file('OEBPS/toc.ncx', `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN" "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head>
+    <meta name="dtb:uid" content="urn:uuid:${uuidv4()}"/>
+    <meta name="dtb:depth" content="1"/>
+    <meta name="dtb:totalPageCount" content="0"/>
+    <meta name="dtb:maxPageNumber" content="0"/>
+  </head>
+  <docTitle><text>${escapeXml(novel.title)}</text></docTitle>
+  <navMap>
+${navPoints}
+  </navMap>
+</ncx>`);
+
+    // stylesheet.css
+    zip.file('OEBPS/stylesheet.css', `body { font-family: Georgia, 'SimSun', serif; line-height: 1.8; padding: 1em; max-width: 600px; margin: 0 auto; }
+h1 { text-align: center; font-size: 1.4em; margin-bottom: 1.5em; }
+p { text-indent: 2em; margin: 0.5em 0; }
+.summary { text-align: center; color: #666; font-style: italic; text-indent: 0; }`);
+
+    const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/epub+zip' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${novel.title}.epub`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [novel]);
+
   const download = (content: string, filename: string, type: string) => {
     const blob = new Blob(['﻿' + content], { type });
     const url = URL.createObjectURL(blob);
@@ -77,6 +188,7 @@ export default function ExportPage() {
           <button onClick={() => download(generateMarkdown(), `${novel.title}.md`, 'text/markdown')} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">Markdown</button>
           <button onClick={() => download(generateTxt(), `${novel.title}.txt`, 'text/plain')} className="bg-gray-700 text-white px-4 py-2 rounded-xl text-sm hover:bg-gray-800">TXT</button>
           <button onClick={() => download(generateHtml(), `${novel.title}.html`, 'text/html')} className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-green-700">HTML</button>
+          <button onClick={generateEpub} className="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-purple-700">📖 EPUB</button>
           <button onClick={() => { navigator.clipboard.writeText(generateTxt()); alert('已复制全文到剪贴板！'); }} className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-amber-700">📋 复制全文</button>
         </div>
       </div>

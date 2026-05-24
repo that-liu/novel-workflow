@@ -1,27 +1,44 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { callAI, streamAIChat, ChatMessage, AI_MODELS } from '@/lib/ai';
-
-interface Message {
-  role: 'user' | 'ai';
-  text: string;
-}
+import { MemoryMessage, getMemory, setMemory, clearMemory } from '@/lib/ai-memory';
 
 interface Props {
   systemPrompt: string;
   placeholder?: string;
   initialContext?: string;
   title?: string;
+  /** Cross-page memory key — pages sharing the same key share the same conversation history */
+  memoryKey?: string;
 }
 
-export default function AIChat({ systemPrompt, placeholder, initialContext, title }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function AIChat({ systemPrompt, placeholder, initialContext, title, memoryKey }: Props) {
+  const [messages, setMessages] = useState<MemoryMessage[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [model, setModel] = useState(AI_MODELS[0].id);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const loadedRef = useRef(false);
+
+  // On mount: restore conversation from global memory
+  useEffect(() => {
+    if (memoryKey) {
+      const saved = getMemory(memoryKey);
+      if (saved.length > 0) {
+        setMessages(saved);
+      }
+      loadedRef.current = true;
+    }
+  }, [memoryKey]);
+
+  // Sync messages back to global memory whenever they change
+  useEffect(() => {
+    if (memoryKey && loadedRef.current) {
+      setMemory(memoryKey, messages);
+    }
+  }, [memoryKey, messages]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, streaming]);
 
@@ -29,7 +46,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
     if (!input.trim() || loading) return;
     const userMsg = input.trim();
     setInput('');
-    const newMessages: Message[] = [...messages, { role: 'user', text: userMsg }];
+    const newMessages: MemoryMessage[] = [...messages, { role: 'user', text: userMsg }];
     setMessages(newMessages);
     setLoading(true);
 
@@ -37,7 +54,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
       role: m.role === 'ai' ? 'assistant' : 'user',
       content: m.text,
     }));
-    if (initialContext && messages.length === 0) {
+    if (initialContext && messages.length === 0 && !(memoryKey && loadedRef.current && getMemory(memoryKey).length > 0)) {
       chatHistory.unshift({ role: 'user', content: initialContext });
     }
 
@@ -75,12 +92,15 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
     setLoading(false);
   };
 
-  const clearHistory = () => setMessages([]);
+  const clearHistory = () => {
+    setMessages([]);
+    if (memoryKey) clearMemory(memoryKey);
+  };
 
   return (
     <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white shadow-sm">
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <span className="text-sm font-semibold text-gray-700">{title || '🤖 AI 助手'}</span>
+        <span className="text-sm font-semibold text-gray-700">{title || 'AI 助手'}</span>
         <div className="flex items-center gap-2">
           <select value={model} onChange={e => setModel(e.target.value)} className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-600">
             {AI_MODELS.map(m => (
@@ -104,7 +124,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
                 ? 'bg-indigo-50 text-gray-800 rounded-tl-sm'
                 : 'bg-gray-100 text-gray-800 rounded-tr-sm'
             }`}>
-              <div className="text-xs text-gray-400 mb-1">{m.role === 'ai' ? '🤖 AI' : '👤 你'}</div>
+              <div className="text-xs text-gray-400 mb-1">{m.role === 'ai' ? 'AI' : '你'}</div>
               <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
             </div>
           </div>
@@ -112,7 +132,7 @@ export default function AIChat({ systemPrompt, placeholder, initialContext, titl
         {streaming !== null && (
           <div className="flex justify-start">
             <div className="max-w-[85%] p-3.5 rounded-2xl rounded-tl-sm bg-indigo-50 text-gray-800 text-sm">
-              <div className="text-xs text-gray-400 mb-1">🤖 AI 正在输出...</div>
+              <div className="text-xs text-gray-400 mb-1">AI 正在输出...</div>
               <div className="whitespace-pre-wrap leading-relaxed">
                 {streaming}
                 <span className="inline-block w-1.5 h-4 bg-indigo-500 ml-0.5 animate-pulse align-text-bottom" />
