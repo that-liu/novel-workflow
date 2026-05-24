@@ -12,6 +12,7 @@ const steps = [
   { key: 'timeline', label: '⏳ 故事时间线', desc: '按时间排列关键事件', color: 'from-blue-500 to-cyan-500' },
   { key: 'outline', label: '📋 情节大纲', desc: '规划章节结构与摘要', color: 'from-pink-500 to-rose-500' },
   { key: 'write', label: '✍️ 开始写作', desc: '逐章 AI 辅助创作', color: 'from-indigo-500 to-purple-500' },
+  { key: 'bible', label: '📖 故事圣经', desc: '设定集、角色、时间线一览', color: 'from-amber-500 to-orange-500' },
   { key: 'export', label: '📦 导出作品', desc: '预览完整小说并下载', color: 'from-gray-500 to-slate-500' },
 ];
 

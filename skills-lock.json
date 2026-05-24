@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "design-sprint": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "skillPath": "design-sprint/SKILL.md",
+      "computedHash": "454ad8c94bae3577a654540a1899bb630da57434656097d9ec9e64cc8e896c8a"
+    },
+    "prd-development": {
+      "source": "deanpeters/product-manager-skills",
+      "sourceType": "github",
+      "skillPath": "skills/prd-development/SKILL.md",
+      "computedHash": "1b7f6de0d407c7ed581ab96fcdd332392f4552ddafa26da5fe29eff863123c7f"
+    },
+    "product-strategy-session": {
+      "source": "deanpeters/product-manager-skills",
+      "sourceType": "github",
+      "skillPath": "skills/product-strategy-session/SKILL.md",
+      "computedHash": "7b4515881efca051541c136684e936b7bdc03b952fbfc5ab6609f6d346d3dc1b"
+    },
+    "user-story": {
+      "source": "deanpeters/product-manager-skills",
+      "sourceType": "github",
+      "skillPath": "skills/user-story/SKILL.md",
+      "computedHash": "9c9c5780c408ac4cd8476facb2332275609650d0b8f8f3148d766f89777ee285"
+    }
+  }
+}

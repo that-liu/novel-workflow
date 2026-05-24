@@ -41,6 +41,20 @@ export default function ExportPage() {
     return txt;
   };
 
+  const generateHtml = () => {
+    let html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>${novel.title}</title>`;
+    html += `<style>body{max-width:800px;margin:0 auto;padding:2em;font-family:Georgia,serif;line-height:1.8}h1{text-align:center}h2{border-bottom:1px solid #ddd;padding-bottom:.3em}</style></head><body>`;
+    html += `<h1>${novel.title}</h1>`;
+    if (novel.description) html += `<p style="text-align:center;color:#666"><em>${novel.description}</em></p>`;
+    sortedChapters.forEach(ch => {
+      html += `<h2>第${ch.order}章 ${ch.title}</h2>`;
+      if (ch.summary) html += `<p style="color:#888"><em>${ch.summary}</em></p>`;
+      html += `<div>${ch.content.split('\n').map((p: string) => `<p>${p || '&nbsp;'}</p>`).join('')}</div>`;
+    });
+    html += `</body></html>`;
+    return html;
+  };
+
   const download = (content: string, filename: string, type: string) => {
     const blob = new Blob(['﻿' + content], { type });
     const url = URL.createObjectURL(blob);
@@ -59,9 +73,11 @@ export default function ExportPage() {
           <h1 className="text-2xl font-bold text-gray-900">📦 导出作品</h1>
           <p className="text-gray-500 text-sm">预览并下载你的完整小说</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => download(generateMarkdown(), `${novel.title}.md`, 'text/markdown')} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">下载 Markdown</button>
-          <button onClick={() => download(generateTxt(), `${novel.title}.txt`, 'text/plain')} className="bg-gray-700 text-white px-4 py-2 rounded-xl text-sm hover:bg-gray-800">下载 TXT</button>
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => download(generateMarkdown(), `${novel.title}.md`, 'text/markdown')} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-indigo-700">Markdown</button>
+          <button onClick={() => download(generateTxt(), `${novel.title}.txt`, 'text/plain')} className="bg-gray-700 text-white px-4 py-2 rounded-xl text-sm hover:bg-gray-800">TXT</button>
+          <button onClick={() => download(generateHtml(), `${novel.title}.html`, 'text/html')} className="bg-green-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-green-700">HTML</button>
+          <button onClick={() => { navigator.clipboard.writeText(generateTxt()); alert('已复制全文到剪贴板！'); }} className="bg-amber-600 text-white px-4 py-2 rounded-xl text-sm hover:bg-amber-700">📋 复制全文</button>
         </div>
       </div>
 
